@@ -17,7 +17,7 @@
         <aside class="sidebar">
             <div class="sidebar-brand mb-4 d-flex align-items-center gap-2">
                 <i class="bi bi-cup-hot-fill fs-4" style="color: #D35400;"></i>
-                <div class="h4 mb-0 fw-bold text-white">Daily Spot Cafe</div>
+                <div class="h4 mb-0 brand-logo text-white">Daily Spot Cafe</div>
             </div>
             <div class="menu-card p-0">
                 <div class="list-group sidebar-nav">

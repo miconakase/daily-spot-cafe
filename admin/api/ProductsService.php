@@ -50,6 +50,7 @@ switch ($action) {
             'price'             => $_POST['price']             ?? 0,
             'short_description' => $_POST['short_description'] ?? '',
             'long_description'  => $_POST['long_description']  ?? '',
+            'is_published'      => $_POST['is_published']      ?? 0,
             'variants'          => $variants,
         ];
         echo json_encode($productController->update($id, $data));

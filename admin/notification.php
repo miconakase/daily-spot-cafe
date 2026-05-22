@@ -74,7 +74,7 @@ if (empty($notifications) && $filter === 'all') {
         <aside class="sidebar">
             <div class="sidebar-brand mb-4 d-flex align-items-center gap-2">
                 <i class="bi bi-cup-hot-fill fs-4" style="color: #D35400;"></i>
-                <div class="h4 mb-0 fw-bold text-white">Daily Spot Cafe</div>
+                <div class="h4 mb-0 brand-logo text-white">Daily Spot Cafe</div>
             </div>
             <div class="menu-card p-0">
                 <div class="list-group sidebar-nav">
@@ -294,9 +294,9 @@ if (empty($notifications) && $filter === 'all') {
                                                         <i class="bi bi-check-lg"></i>
                                                     </a>
                                                 <?php endif; ?>
-                                                <a href="notification.php?action=delete&id=<?php echo $notif['id']; ?>" class="btn btn-light btn-sm text-danger" title="Delete" onclick="return confirm('Are you sure?')">
+                                                <button class="btn btn-light btn-sm text-danger" title="Delete" data-notif-id="<?= $notif['id'] ?>">
                                                     <i class="bi bi-trash"></i>
-                                                </a>
+                                                </button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -309,9 +309,30 @@ if (empty($notifications) && $filter === 'all') {
         </div>
     </div>
 
+    <!-- DELETE CONFIRM MODAL -->
+    <div class="modal fade" id="deleteNotifModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3 mt-2">
+                        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Delete Notification</h5>
+                    <p class="text-muted mb-0">Are you sure you want to delete this notification? This action cannot be undone.</p>
+                    <input type="hidden" id="deleteNotifId">
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger px-4" id="confirmDeleteNotifBtn">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="../src/assets/javascript/admin/left-side-bar.js?v=5"></script>
     <script src="../src/assets/javascript/admin/top-navbar.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../src/assets/javascript/admin/shared.js"></script>
     <script>
         document.getElementById('notificationSearch').addEventListener('keyup', function() {
             let filter = this.value.toLowerCase();
@@ -325,6 +346,19 @@ if (empty($notifications) && $filter === 'all') {
                     row.style.display = 'none';
                 }
             });
+        });
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-notif-id]');
+            if (!btn) return;
+            document.getElementById('deleteNotifId').value = btn.getAttribute('data-notif-id');
+            new bootstrap.Modal(document.getElementById('deleteNotifModal')).show();
+        });
+
+        document.getElementById('confirmDeleteNotifBtn').addEventListener('click', function() {
+            const id = document.getElementById('deleteNotifId').value;
+            bootstrap.Modal.getInstance(document.getElementById('deleteNotifModal')).hide();
+            window.location.href = 'notification.php?action=delete&id=' + id;
         });
     </script>
 </body>

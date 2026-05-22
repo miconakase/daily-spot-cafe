@@ -1,9 +1,17 @@
 <?php require_once 'auth/auth_check.php'; ?>
 <?php
 require_once '../src/controller/OrderController.php';
+require_once '../src/controller/UserDetailsController.php';
+require_once '../src/controller/ProductController.php';
 
 $orderController = new OrderController();
 $orders = $orderController->index();
+
+$userDetailsController = new UserDetailsController();
+$customers = $userDetailsController->index();
+
+$productController = new ProductController();
+$products = $productController->getPublishedProducts();
 ?>
 <!doctype html>
 <html lang="en">
@@ -23,7 +31,7 @@ $orders = $orderController->index();
         <aside class="sidebar">
             <div class="sidebar-brand mb-4 d-flex align-items-center gap-2">
                 <i class="bi bi-cup-hot-fill fs-4" style="color: #D35400;"></i>
-                <div class="h4 mb-0 fw-bold text-white">Daily Spot Cafe</div>
+                <div class="h4 mb-0 brand-logo text-white">Daily Spot Cafe</div>
             </div>
             <div class="menu-card p-0">
                 <div class="list-group sidebar-nav">
@@ -238,8 +246,19 @@ $orders = $orderController->index();
                                     <td><span class="badge <?php echo $payStatusClass; ?>"><?php echo $payStatus; ?></span></td>
                                     <td><?php echo $payType; ?></td>
                                     <td class="text-end">
-                                        <button class="btn btn-light btn-sm" title="Edit"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-light btn-sm text-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                                        <button class="btn btn-light btn-sm" title="Edit"
+                                            data-order-id="<?= $order['order_id'] ?>"
+                                            data-customer="<?= htmlspecialchars($customer) ?>"
+                                            data-payment-type="<?= htmlspecialchars($payType) ?>"
+                                            data-payment-status="<?= htmlspecialchars($payStatus) ?>"
+                                            data-order-status="<?= htmlspecialchars($status) ?>"
+                                            data-notes="<?= htmlspecialchars($order['notes'] ?? '') ?>">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-light btn-sm text-danger" title="Delete"
+                                            onclick="deleteOrder(<?= $order['order_id'] ?>)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -253,9 +272,181 @@ $orders = $orderController->index();
         </div>
     </div>
 
+    <!-- ADD ORDER MODAL -->
+    <div class="modal fade" id="addOrderModal" tabindex="-1" aria-labelledby="addOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="addOrderModalLabel">Add New Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="addOrderForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Customer</label>
+                            <select class="form-select bg-light border-0" name="user_id" required>
+                                <option value="">Select Customer</option>
+                                <?php foreach ($customers as $customer): ?>
+                                    <option value="<?= $customer['user_id'] ?>">
+                                        <?= str_pad(htmlspecialchars($customer['full_name']), 35) ?> | <?= htmlspecialchars($customer['email'] ?? '') ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Product*</label>
+                                <select class="form-select bg-light border-0" name="product_id" required>
+                                    <option value="">Select Product</option>
+                                    <?php foreach ($products as $product): ?>
+                                        <option value="<?= $product['product_id'] ?>">
+                                            <?= htmlspecialchars($product['product_name']) ?> — ₱<?= number_format((float)$product['price'], 2) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label small fw-bold">Quantity*</label>
+                                <input type="number" class="form-control bg-light border-0" name="quantity" min="1" value="1" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label small fw-bold">Payment Type</label>
+                                <select class="form-select bg-light border-0" name="payment_type">
+                                    <option value="COD">COD</option>
+                                    <option value="GCash">GCash</option>
+                                    <option value="Card">Card</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Payment Status</label>
+                                <select class="form-select bg-light border-0" name="payment_status">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Paid">Paid</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Order Status</label>
+                                <select class="form-select bg-light border-0" name="order_status">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Processing">Processing</option>
+                                    <option value="Ready">Ready</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Notes</label>
+                            <textarea class="form-control bg-light border-0" name="notes" rows="3" placeholder="Optional notes..."></textarea>
+                        </div>
+
+                        <div class="mb-0 text-end pt-3">
+                            <button type="button" class="btn btn-light px-4 me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-4">Save Order</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRM MODAL -->
+    <div class="modal fade" id="deleteOrderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3 mt-2">
+                        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Delete Order</h5>
+                    <p class="text-muted mb-0" id="deleteOrderMessage">Are you sure you want to delete this order? This action cannot be undone.</p>
+                    <input type="hidden" id="deleteOrderId">
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT ORDER MODAL -->
+    <div class="modal fade" id="editOrderModal" tabindex="-1" aria-labelledby="editOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="editOrderModalLabel">Edit Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editOrderForm">
+                        <input type="hidden" name="order_id" id="editOrderId">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Order ID</label>
+                            <input type="text" class="form-control bg-light border-0" id="editOrderDisplayId" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Customer</label>
+                            <input type="text" class="form-control bg-light border-0" id="editOrderCustomer" readonly>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Payment Type</label>
+                                <select class="form-select bg-light border-0" name="payment_type" id="editPaymentType">
+                                    <option value="COD">COD</option>
+                                    <option value="GCash">GCash</option>
+                                    <option value="Card">Card</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Payment Status</label>
+                                <select class="form-select bg-light border-0" name="payment_status" id="editPaymentStatus">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Refunded">Refunded</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Order Status</label>
+                            <select class="form-select bg-light border-0" name="order_status" id="editOrderStatus">
+                                <option value="Pending">Pending</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Ready">Ready</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Notes</label>
+                            <textarea class="form-control bg-light border-0" name="notes" id="editOrderNotes" rows="3" placeholder="Optional notes..."></textarea>
+                        </div>
+
+                        <div class="mb-0 text-end pt-3">
+                            <button type="button" class="btn btn-light px-4 me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-4">Update Order</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="../src/assets/javascript/admin/left-side-bar.js?v=5"></script>
     <script src="../src/assets/javascript/admin/top-navbar.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-8DBwxvghb+f8w824cDtgFXtW+eLk+ifaFVIJ9ai0SyxgbpPzJblwXERQ8GHKq2ya" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script></body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../src/assets/javascript/admin/shared.js"></script>
+    <script src="../src/assets/javascript/admin/orders.js"></script></body>
 </html>

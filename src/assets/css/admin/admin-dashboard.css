@@ -1,6 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800&display=swap');
+
 body {
     background: #F2E8DF;
     color: #3D2B1F;
+}
+
+.brand-logo {
+    font-family: 'Playfair Display', serif;
+    font-weight: 800;
 }
 
 .dashboard-app {
@@ -273,4 +280,66 @@ body {
 
 .password-requirement i {
     font-size: 0.6rem;
+}
+
+/* Toast notification */
+.toast-notification {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999;
+    min-width: 320px;
+    max-width: 420px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 12px 40px rgba(61, 43, 31, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-left: 4px solid #2ecc71;
+    animation: toastSlideIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.toast-notification.hide {
+    animation: toastSlideOut 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toastSlideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+}
+.toast-notification.error {
+    border-left-color: #e74c3c;
+}
+.toast-notification .toast-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+.toast-notification .toast-icon.success {
+    color: #2ecc71;
+}
+.toast-notification .toast-icon.error {
+    color: #e74c3c;
+}
+.toast-notification .toast-message {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #3D2B1F;
 }

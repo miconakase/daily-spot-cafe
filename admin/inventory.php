@@ -1,9 +1,13 @@
 <?php require_once 'auth/auth_check.php'; ?>
 <?php
 require_once '../src/controller/CategoryController.php';
+require_once '../src/controller/ProductController.php';
 
 $categoryController = new CategoryController();
 $categories = $categoryController->index();
+
+$productController = new ProductController();
+$products = $productController->index();
 ?>
 <!doctype html>
 <html lang="en">
@@ -26,7 +30,7 @@ $categories = $categoryController->index();
         <aside class="sidebar">
             <div class="sidebar-brand mb-4 d-flex align-items-center gap-2">
                 <i class="bi bi-cup-hot-fill fs-4" style="color: #D35400;"></i>
-                <div class="h4 mb-0 fw-bold text-white">Daily Spot Cafe</div>
+                <div class="h4 mb-0 brand-logo text-white">Daily Spot Cafe</div>
             </div>
             <div class="menu-card p-0">
                 <div class="list-group sidebar-nav">
@@ -206,21 +210,40 @@ $categories = $categoryController->index();
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Example Row 1 -->
-                            <tr>
-                                <td>1</td>
-                                <td>
-                                    <span class="fw-semibold">Caramel Macchiato</span>
-                                </td>
-                                <td>Frappe</td>
-                                <td>$4.50</td>
-                                <td><span class="badge bg-success-subtle text-success">Published</span></td>
-                                <td>2024-06-01</td>
-                                <td class="text-end">
-                                    <button class="btn btn-light btn-sm"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn btn-light btn-sm text-danger"><i class="bi bi-trash"></i></button>
-                                </td>
-                            </tr>
+                            <?php if (empty($products)): ?>
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">No products found</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($products as $product):
+                                    $statusClass = $product['is_published'] ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary';
+                                    $statusText = $product['is_published'] ? 'Published' : 'Draft';
+                                ?>
+                                <tr>
+                                    <td><?= $product['product_id'] ?></td>
+                                    <td><span class="fw-semibold"><?= htmlspecialchars($product['product_name']) ?></span></td>
+                                    <td><?= htmlspecialchars($product['category_name']) ?></td>
+                                    <td>$<?= number_format((float)$product['price'], 2) ?></td>
+                                    <td><span class="badge <?= $statusClass ?>"><?= $statusText ?></span></td>
+                                    <td><?= date('Y-m-d', strtotime($product['created_at'])) ?></td>
+                                    <td class="text-end">
+                                        <button class="btn btn-light btn-sm" title="Edit"
+                                            data-product-id="<?= $product['product_id'] ?>"
+                                            data-product-name="<?= htmlspecialchars($product['product_name']) ?>"
+                                            data-category-id="<?= $product['category_id'] ?>"
+                                            data-price="<?= $product['price'] ?>"
+                                            data-short-description="<?= htmlspecialchars($product['short_description'] ?? '') ?>"
+                                            data-status="<?= $product['is_published'] ?>">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-light btn-sm text-danger" title="Delete"
+                                            onclick="deleteProduct(<?= $product['product_id'] ?>)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -319,11 +342,94 @@ $categories = $categoryController->index();
     </div>
 </div>
 
+    <!-- EDIT PRODUCT MODAL -->
+    <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="editProductModalLabel">Edit Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editProductForm">
+                        <input type="hidden" name="product_id" id="editProductId">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Product ID</label>
+                            <input type="text" class="form-control bg-light border-0" id="editProductDisplayId" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Product Name*</label>
+                            <input type="text" class="form-control bg-light border-0" id="editProductName" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Category*</label>
+                                <select class="form-select bg-light border-0" id="editCategoryId" required>
+                                    <option value="">Select Category</option>
+                                    <?php foreach($categories as $category): ?>
+                                        <option value="<?= $category['category_id'] ?>">
+                                            <?= htmlspecialchars($category['category_name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Price (PHP)*</label>
+                                <input type="number" step="0.01" class="form-control bg-light border-0" id="editPrice" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Short Description*</label>
+                            <input type="text" class="form-control bg-light border-0" id="editShortDescription" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Status</label>
+                            <select class="form-select bg-light border-0" id="editStatus">
+                                <option value="1">Published</option>
+                                <option value="0">Draft</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-0 text-end pt-3">
+                            <button type="button" class="btn btn-light px-4 me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-4">Update Product</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRM MODAL -->
+    <div class="modal fade" id="deleteProductModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3 mt-2">
+                        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Delete Product</h5>
+                    <p class="text-muted mb-0" id="deleteProductMessage">Are you sure you want to delete this product? This action cannot be undone.</p>
+                    <input type="hidden" id="deleteProductId">
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger px-4" id="confirmDeleteProductBtn">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="../src/assets/javascript/admin/left-side-bar.js?v=5"></script>
     <script src="../src/assets/javascript/admin/top-navbar.js"></script>
     <script src="../src/assets/javascript/admin/rich-text-editor.js"></script>
-    <script src="../src/assets/javascript/admin/inventory.js"></script>
+    <script src="../src/assets/javascript/admin/shared.js"></script>
+    <script src="../src/assets/javascript/admin/inventory.js?v=2"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-8DBwxvghb+f8w824cDtgFXtW+eLk+ifaFVIJ9ai0SyxgbpPzJblwXERQ8GHKq2ya" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

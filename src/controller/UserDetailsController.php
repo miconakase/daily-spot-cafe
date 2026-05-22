@@ -180,6 +180,15 @@ class UserDetailsController
 
     private function enrichUserDetails($row)
     {
+        $fullName = $row['first_name'];
+        if (!empty($row['middle_name'])) {
+            $fullName .= ' ' . $row['middle_name'];
+        }
+        $fullName .= ' ' . $row['last_name'];
+        if (!empty($row['suffix'])) {
+            $fullName .= ' ' . $row['suffix'];
+        }
+
         return array(
             'user_id' => $row['user_id'],
             'first_name' => $row['first_name'],
@@ -189,7 +198,7 @@ class UserDetailsController
             'phone_number' => $row['phone_number'],
             'email' => $row['email'],
             'updated_at' => $row['updated_at'],
-            'full_name' => $this->userDetails->getFullName()
+            'full_name' => $fullName
         );
     }
 }

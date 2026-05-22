@@ -22,7 +22,7 @@ $users = $userController->index();
         <aside class="sidebar">
             <div class="sidebar-brand mb-4 d-flex align-items-center gap-2">
                 <i class="bi bi-cup-hot-fill fs-4" style="color: #D35400;"></i>
-                <div class="h4 mb-0 fw-bold text-white">Daily Spot Cafe</div>
+                <div class="h4 mb-0 brand-logo text-white">Daily Spot Cafe</div>
             </div>
             <div class="menu-card p-0">
                 <div class="list-group sidebar-nav">
@@ -214,8 +214,19 @@ $users = $userController->index();
                                         <td><?php echo htmlspecialchars($phone); ?></td>
                                         <td><span class="badge <?php echo $roleBadge; ?>"><?php echo htmlspecialchars($roleText); ?></span></td>
                                         <td class="text-end">
-                                            <button class="btn btn-light btn-sm"><i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-light btn-sm text-danger"><i class="bi bi-trash"></i></button>
+                                            <button class="btn btn-light btn-sm" title="Edit"
+                                                data-user-id="<?= $user['user_id'] ?>"
+                                                data-first-name="<?= htmlspecialchars($user['details']['first_name'] ?? '') ?>"
+                                                data-last-name="<?= htmlspecialchars($user['details']['last_name'] ?? '') ?>"
+                                                data-email="<?= htmlspecialchars($email) ?>"
+                                                data-phone="<?= htmlspecialchars($phone) ?>"
+                                                data-role-id="<?= $user['role_id'] ?>">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-light btn-sm text-danger" title="Delete"
+                                                onclick="deleteContact(<?= $user['user_id'] ?>)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -265,24 +276,87 @@ $users = $userController->index();
         </div>
     </div>
 
+    <!-- EDIT CONTACT MODAL -->
+    <div class="modal fade" id="editContactModal" tabindex="-1" aria-labelledby="editContactModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="editContactModalLabel">Edit Contact</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editContactForm">
+                        <input type="hidden" name="user_id" id="editUserId">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">User ID</label>
+                            <input type="text" class="form-control bg-light border-0" id="editUserDisplayId" readonly>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">First Name</label>
+                                <input type="text" class="form-control bg-light border-0" name="first_name" id="editFirstName">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Last Name</label>
+                                <input type="text" class="form-control bg-light border-0" name="last_name" id="editLastName">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="text" class="form-control bg-light border-0" name="email" id="editEmail">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Phone</label>
+                            <input type="text" class="form-control bg-light border-0" name="phone_number" id="editPhone">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Role</label>
+                            <select class="form-select bg-light border-0" name="role_id" id="editRoleId">
+                                <option value="2">User</option>
+                                <option value="1">Admin</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-0 text-end pt-3">
+                            <button type="button" class="btn btn-light px-4 me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-4">Update Contact</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRM MODAL -->
+    <div class="modal fade" id="deleteContactModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3 mt-2">
+                        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Delete Contact</h5>
+                    <p class="text-muted mb-0">Are you sure you want to delete this contact? This action cannot be undone.</p>
+                    <input type="hidden" id="deleteContactId">
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger px-4" id="confirmDeleteContactBtn">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="../src/assets/javascript/admin/left-side-bar.js?v=5"></script>
     <script src="../src/assets/javascript/admin/top-navbar.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const userDetailsModal = document.getElementById('userDetailsModal');
-            userDetailsModal.addEventListener('show.bs.modal', function (event) {
-                // Button that triggered the modal
-                const button = event.relatedTarget;
-                // Extract info from data-bs-* attributes and update the modal's content.
-                document.getElementById('modalFullName').textContent = button.getAttribute('data-full-name');
-                document.getElementById('modalEmail').textContent = button.getAttribute('data-email');
-                document.getElementById('modalPhone').textContent = button.getAttribute('data-phone');
-                document.getElementById('modalRole').textContent = button.getAttribute('data-role');
-                document.getElementById('modalUserId').textContent = button.getAttribute('data-user-id');
-            });
-        });
-    </script>
+    <script src="../src/assets/javascript/admin/shared.js"></script>
+    <script src="../src/assets/javascript/admin/contacts.js"></script>
 </body>
 </html>

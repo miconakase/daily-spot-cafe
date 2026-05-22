@@ -23,7 +23,7 @@ $categories = $categoryController->index();
         <aside class="sidebar">
             <div class="sidebar-brand mb-4 d-flex align-items-center gap-2">
                 <i class="bi bi-cup-hot-fill fs-4" style="color: #D35400;"></i>
-                <div class="h4 mb-0 fw-bold text-white">Daily Spot Cafe</div>
+                <div class="h4 mb-0 brand-logo text-white">Daily Spot Cafe</div>
             </div>
             <div class="menu-card p-0">
                 <div class="list-group sidebar-nav">
@@ -204,8 +204,17 @@ $categories = $categoryController->index();
                                         </td>
                                         <td><?php echo htmlspecialchars(date('Y-m-d', strtotime($category['created_at']))); ?></td>
                                         <td class="text-end">
-                                            <button class="btn btn-light btn-sm"><i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-light btn-sm text-danger"><i class="bi bi-trash"></i></button>
+                                            <button class="btn btn-light btn-sm" title="Edit"
+                                                data-category-id="<?= $category['category_id'] ?>"
+                                                data-category-name="<?= htmlspecialchars($category['category_name']) ?>"
+                                                data-description="<?= htmlspecialchars($category['description'] ?? '') ?>"
+                                                data-is-active="<?= $category['is_active'] ?>">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-light btn-sm text-danger" title="Delete"
+                                                onclick="deleteCategory(<?= $category['category_id'] ?>)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -253,6 +262,71 @@ $categories = $categoryController->index();
         </div>
     </div>
 
+    <!-- EDIT CATEGORY MODAL -->
+    <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="editCategoryModalLabel">Edit Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editCategoryForm">
+                        <input type="hidden" name="category_id" id="editCategoryId">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Category ID</label>
+                            <input type="text" class="form-control bg-light border-0" id="editCategoryDisplayId" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Category Name*</label>
+                            <input type="text" class="form-control bg-light border-0" name="category_name" id="editCategoryName" placeholder="Enter category name" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Description</label>
+                            <textarea class="form-control bg-light border-0" name="description" id="editCategoryDescription" rows="3" placeholder="Enter category description (optional)"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Status</label>
+                            <select class="form-select bg-light border-0" name="is_active" id="editCategoryStatus">
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-0 text-end pt-3">
+                            <button type="button" class="btn btn-light px-4 me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-4">Update Category</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRM MODAL -->
+    <div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3 mt-2">
+                        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Delete Category</h5>
+                    <p class="text-muted mb-0">Are you sure you want to delete this category? This action cannot be undone.</p>
+                    <input type="hidden" id="deleteCategoryId">
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger px-4" id="confirmDeleteCategoryBtn">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="../src/assets/javascript/admin/left-side-bar.js?v=5"></script>
     <script src="../src/assets/javascript/admin/top-navbar.js"></script>
 
@@ -260,5 +334,7 @@ $categories = $categoryController->index();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     <script src="https://quilljs.com"></script>
+    <script src="../src/assets/javascript/admin/shared.js"></script>
+    <script src="../src/assets/javascript/admin/categories.js"></script>
 </body>
 </html>
