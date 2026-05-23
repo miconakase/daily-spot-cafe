@@ -30,13 +30,13 @@ class Product
         $this->product_name = htmlspecialchars(strip_tags($this->product_name));
         $this->price = htmlspecialchars(strip_tags($this->price));
         $this->short_description = htmlspecialchars(strip_tags($this->short_description));
-        $this->long_description = htmlspecialchars(strip_tags($this->long_description));
+        $this->long_description = htmlspecialchars($this->long_description);
         $this->category_id = htmlspecialchars(strip_tags($this->category_id));
         $this->is_published = htmlspecialchars(strip_tags($this->is_published));
         $this->is_available = htmlspecialchars(strip_tags($this->is_available));
         $this->img_url = htmlspecialchars(strip_tags($this->img_url));
 
-        $stmt->bind_param("sdssiiiss", $this->product_name, $this->price, $this->short_description, $this->long_description, $this->category_id, $this->is_published, $this->is_available, $this->img_url);
+        $stmt->bind_param("sdssiiis", $this->product_name, $this->price, $this->short_description, $this->long_description, $this->category_id, $this->is_published, $this->is_available, $this->img_url);
 
         if ($stmt->execute()) {
             $this->product_id = $this->conn->insert_id;
@@ -99,13 +99,13 @@ class Product
         $this->product_name = htmlspecialchars(strip_tags($this->product_name));
         $this->price = htmlspecialchars(strip_tags($this->price));
         $this->short_description = htmlspecialchars(strip_tags($this->short_description));
-        $this->long_description = htmlspecialchars(strip_tags($this->long_description));
+        $this->long_description = htmlspecialchars($this->long_description);
         $this->category_id = htmlspecialchars(strip_tags($this->category_id));
         $this->is_published = htmlspecialchars(strip_tags($this->is_published));
         $this->is_available = htmlspecialchars(strip_tags($this->is_available));
         $this->img_url = htmlspecialchars(strip_tags($this->img_url));
 
-        $stmt->bind_param("sdssiiissi", $this->product_name, $this->price, $this->short_description, $this->long_description, $this->category_id, $this->is_published, $this->is_available, $this->img_url, $this->product_id);
+        $stmt->bind_param("sdssiiisi", $this->product_name, $this->price, $this->short_description, $this->long_description, $this->category_id, $this->is_published, $this->is_available, $this->img_url, $this->product_id);
 
         return $stmt->execute();
     }

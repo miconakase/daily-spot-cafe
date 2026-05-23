@@ -2,7 +2,7 @@
 session_start();
 header('Content-Type: application/json');
 
-require_once '../controller/ProductController.php';
+require_once __DIR__ . '/../../src/controller/ProductController.php';
 
 $productController = new ProductController();
 
@@ -50,7 +50,9 @@ switch ($action) {
             'price'             => $_POST['price']             ?? 0,
             'short_description' => $_POST['short_description'] ?? '',
             'long_description'  => $_POST['long_description']  ?? '',
-            'is_published'      => $_POST['is_published']      ?? 0,
+            'is_published'      => $_POST['is_published']      ?? 1,
+            'is_available'      => $_POST['is_available']      ?? 1,
+            'img_url'           => $_POST['img_url']           ?? '',
             'variants'          => $variants,
         ];
         echo json_encode($productController->update($id, $data));

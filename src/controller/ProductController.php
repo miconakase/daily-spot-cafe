@@ -53,11 +53,17 @@ class ProductController
 
     public function store($data)
     {
-        $requiredFields = ['product_name', 'price', 'short_description', 'long_description', 'category_id'];
+        $requiredFields = ['product_name', 'short_description', 'long_description', 'category_id'];
         foreach ($requiredFields as $field) {
             if (empty($data[$field])) {
                 return array('success' => false, 'message' => ucfirst(str_replace('_', ' ', $field)) . ' is required');
             }
+        }
+
+        // Validate price only when no variants are provided
+        $hasVariants = !empty($data['variants']) && is_array($data['variants']);
+        if (!$hasVariants && (!isset($data['price']) || $data['price'] === '')) {
+            return array('success' => false, 'message' => 'Price is required');
         }
 
         // Validate category exists
@@ -68,7 +74,7 @@ class ProductController
         }
 
         $this->product->product_name = $data['product_name'];
-        $this->product->price = $data['price'];
+        $this->product->price = $data['price'] ?? 0;
         $this->product->short_description = $data['short_description'];
         $this->product->long_description = $data['long_description'];
         $this->product->category_id = $data['category_id'];
@@ -121,7 +127,7 @@ class ProductController
         }
         
         $new_filename = uniqid('product_', true) . '.' . $file_ext;
-        $upload_dir = '../public/uploads/products/';
+        $upload_dir = __DIR__ . '/../../public/uploads/products/';
         
         if (!is_dir($upload_dir)) {
             mkdir($upload_dir, 0777, true);
@@ -163,6 +169,15 @@ class ProductController
         $this->product->is_published = isset($data['is_published']) ? (int)$data['is_published'] : $this->product->is_published;
         $this->product->is_available = isset($data['is_available']) ? (int)$data['is_available'] : $this->product->is_available;
         $this->product->img_url = $data['img_url'] ?? $this->product->img_url;
+
+        if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] == 0) {
+            $uploadResult = $this->uploadImage($_FILES['featured_image']);
+            if ($uploadResult['success']) {
+                $this->product->img_url = $uploadResult['path'];
+            } else {
+                return array('success' => false, 'message' => $uploadResult['message']);
+            }
+        }
 
         if ($this->product->update()) {
             // Re-save variants if provided

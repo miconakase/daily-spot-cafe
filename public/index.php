@@ -9,7 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         .brand-logo { font-family: 'Playfair Display', serif; font-weight: 800; }
-        .nav-link { font-family: 'Inter', sans-serif; font-weight: 500; letter-spacing: 0.02em; }
+        .nav-link { font-family: 'Inter', sans-serif; font-weight: 500; letter-spacing: 0.02em; transition: color 0.2s; }
+        .nav-link:hover { color: #D35400 !important; }
         .hero-title { font-family: 'Playfair Display', serif; font-weight: 700; }
         .section-title { font-family: 'Playfair Display', serif; font-weight: 700; }
         body { font-family: 'Inter', sans-serif; }
@@ -21,8 +22,8 @@
             <div class="d-flex align-items-center justify-content-between" style="padding: 0 5rem;">
                 <span class="fs-3 brand-logo" style="color: #fff;">Daily Spot Cafe</span>
                 <div class="d-flex align-items-center gap-5">
-                    <span class="nav-link" style="color: #fff; cursor: pointer;">Home</span>
-                    <span class="nav-link" style="color: #fff; cursor: pointer;">Menu</span>
+                    <span class="nav-link" style="color: #D35400; cursor: pointer;">Home</span>
+                    <a href="page/index.php" class="nav-link text-decoration-none" style="color: #fff; cursor: pointer;">Menu</a>
                     <span class="nav-link" style="color: #fff; cursor: pointer;">About</span>
                     <span class="nav-link" style="color: #fff; cursor: pointer;">Contact</span>
                 </div>
@@ -34,11 +35,12 @@
         </div>
     </header>
 
-    <section class="py-5" style="background-color: #F2E8DF;">
-        <div class="container text-center py-5">
-            <h1 class="hero-title display-3 mb-3" style="color: #3D2B1F;">Welcome to Daily Spot Cafe</h1>
-            <p class="fs-5 mb-4" style="color: #5D4037; max-width: 600px; margin: 0 auto;">Your cozy neighborhood spot for handcrafted coffee, fresh pastries, and warm conversations.</p>
-            <a href="#" class="btn btn-lg px-5 py-3" style="background-color: #3D2B1F; color: #fff; border-radius: 0;">View Our Menu</a>
+    <section class="py-5 position-relative" style="background: url('uploads/DSP_Hero.jpg') center center / cover no-repeat; min-height: 80vh; display: flex; align-items: center;">
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="background-color: rgba(0,0,0,0.5);"></div>
+        <div class="container text-center py-5 position-relative">
+            <h1 class="hero-title display-3 mb-3" style="color: #fff; text-shadow: 2px 2px 8px rgba(0,0,0,0.7);">Welcome to Daily Spot Cafe</h1>
+            <p class="fs-5 mb-4" style="color: #fff; text-shadow: 1px 1px 6px rgba(0,0,0,0.7); max-width: 600px; margin: 0 auto;">Your cozy neighborhood spot for handcrafted coffee, refreshing drinks, and warm conversations.</p>
+            <a href="page/index.php" class="btn btn-lg px-5 py-3" style="background-color: #3D2B1F; color: #fff; border-radius: 0;">View Our Menu</a>
         </div>
     </section>
 
@@ -58,9 +60,9 @@
                 <div class="col-md-4">
                     <div class="card h-100 border-0 shadow-sm">
                         <div class="card-body text-center p-4">
-                            <i class="bi bi-cake fs-1 mb-3" style="color: #D35400;"></i>
-                            <h5 class="card-title" style="color: #3D2B1F;">Fresh Pastries</h5>
-                            <p class="card-text" style="color: #5D4037;">Baked daily with love — from flaky croissants to decadent cakes.</p>
+                            <i class="bi bi-cup-straw fs-1 mb-3" style="color: #D35400;"></i>
+                            <h5 class="card-title" style="color: #3D2B1F;">Non-Coffee Drinks</h5>
+                            <p class="card-text" style="color: #5D4037;">Refreshing teas, cool sodas, and creamy frappes for every taste.</p>
                         </div>
                     </div>
                 </div>
@@ -77,25 +79,12 @@
         </div>
     </section>
 
-    <section class="py-5" style="background-color: #E8D5C4;">
-        <div class="container text-center py-4">
-            <h2 class="section-title mb-4" style="color: #3D2B1F;">Visit Us Today</h2>
-            <p class="fs-5 mb-4" style="color: #5D4037; max-width: 500px; margin: 0 auto;">Open daily from 7:00 AM to 9:00 PM. Come find your new favorite spot.</p>
-            <div class="d-flex justify-content-center gap-3">
-                <i class="bi bi-geo-alt fs-4" style="color: #3D2B1F;"></i>
-                <span style="color: #5D4037;">123 Cafe Street, Manila</span>
-                <i class="bi bi-telephone fs-4" style="color: #3D2B1F;"></i>
-                <span style="color: #5D4037;">(02) 1234 5678</span>
-            </div>
-        </div>
-    </section>
-
     <footer style="background-color: #3D2B1F;">
         <div class="container py-5">
             <div class="row g-4">
                 <div class="col-md-4">
                     <span class="brand-logo fs-4 d-block mb-3" style="color: #fff;">Daily Spot Cafe</span>
-                    <p style="color: #A1887F;">Your cozy neighborhood spot for handcrafted coffee, fresh pastries, and warm conversations. Come find your new favorite place.</p>
+                    <p style="color: #A1887F;">Your cozy neighborhood spot for handcrafted coffee, refreshing drinks, and warm conversations. Come find your new favorite place.</p>
                     <div class="d-flex gap-3">
                         <i class="bi bi-facebook fs-5" style="color: #A1887F; cursor: pointer;"></i>
                         <i class="bi bi-instagram fs-5" style="color: #A1887F; cursor: pointer;"></i>
@@ -106,7 +95,7 @@
                     <h6 class="fw-bold mb-3" style="color: #fff;">Quick Links</h6>
                     <div class="d-flex flex-column gap-2">
                         <span style="color: #A1887F; cursor: pointer;">Home</span>
-                        <span style="color: #A1887F; cursor: pointer;">Menu</span>
+                        <a href="page/index.php" class="text-decoration-none" style="color: #A1887F; cursor: pointer;">Menu</a>
                         <span style="color: #A1887F; cursor: pointer;">About</span>
                         <span style="color: #A1887F; cursor: pointer;">Contact</span>
                     </div>

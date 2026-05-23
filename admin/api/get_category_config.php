@@ -2,7 +2,7 @@
 session_start();
 header('Content-Type: application/json');
 
-require_once '../controller/CategoryController.php';
+require_once __DIR__ . '/../../src/controller/CategoryController.php';
 
 $categoryController = new CategoryController();
 $id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : 0;

@@ -233,7 +233,13 @@ $products = $productController->index();
                                             data-category-id="<?= $product['category_id'] ?>"
                                             data-price="<?= $product['price'] ?>"
                                             data-short-description="<?= htmlspecialchars($product['short_description'] ?? '') ?>"
-                                            data-status="<?= $product['is_published'] ?>">
+                                            data-long-description="<?= htmlspecialchars($product['long_description'] ?? '') ?>"
+                                            data-img-url="<?= htmlspecialchars($product['img_url'] ?? '') ?>"
+                                            data-status="<?= $product['is_published'] ?>"
+                                            data-is-available="<?= $product['is_available'] ?>"
+                                            data-has-variants="<?= $product['has_variants'] ?>"
+                                            data-has-sizes="<?= $product['has_sizes'] ?>"
+                                            data-variants='<?= htmlspecialchars(json_encode($product['variants'] ?? []), ENT_QUOTES) ?>'>
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <button class="btn btn-light btn-sm text-danger" title="Delete"
@@ -266,7 +272,7 @@ $products = $productController->index();
                 <form id="addProductForm">
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Product Name*</label>
-                        <input type="text" class="form-control bg-light border-0" placeholder="Enter product name" required>
+                        <input type="text" class="form-control bg-light border-0" id="productName" placeholder="Enter product name" required>
                     </div>
                     
                     <div class="row">
@@ -281,15 +287,32 @@ $products = $productController->index();
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-3" id="priceFieldWrapper">
                             <label class="form-label small fw-bold">Price (PHP)*</label>
                              <span class="dashboard-tooltip ms-2">
                                 <i class="bi bi-question-circle-fill text-secondary" aria-hidden="true"></i>
                             <span class="dashboard-tooltip-text" role="tooltip">
                                 The price that consumer will pay.</span>
                         </span>
-                            <input type="number" step="0.01" class="form-control bg-light border-0" placeholder="0.00" required>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" id="basePrice" placeholder="0.00" required>
                         </div>
+                    </div>
+
+                    <div id="variantsSection" class="mb-3" style="display:none;">
+                        <label class="form-label small fw-bold">Variant Pricing</label>
+                        <div class="table-responsive">
+                            <table class="table table-bordered mb-0">
+                                <thead class="table-light">
+                                    <tr id="variantHeader"></tr>
+                                </thead>
+                                <tbody id="variantBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="mt-2">
+                            <span class="small fw-bold">Lowest Price: </span>
+                            <span id="addLowestPriceDisplay" class="small fw-bold" style="color: #D35400;">₱0.00</span>
+                        </div>
+                        <small class="text-muted">Set prices for each variant and size combination.</small>
                     </div>
 
                     <div class="mb-3">
@@ -299,7 +322,7 @@ $products = $productController->index();
                             <span class="dashboard-tooltip-text" role="tooltip">
                                 A 1-sentence summary (max 60 chars) shown on the shop gallery and search results.</span>
                         </span>
-                        <input type="text" class="form-control bg-light border-0" required>
+                        <input type="text" class="form-control bg-light border-0" id="shortDescription" required>
                     </div>
 
                     <div class="mb-3">
@@ -311,6 +334,23 @@ $products = $productController->index();
                         </span>
                             <div id="editor-container" style="height: 200px; border-radius: 0 0 8px 8px;"></div>
                         <input type="hidden" name="long_description" id="long_description">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Status</label>
+                            <select class="form-select bg-light border-0" id="addStatus">
+                                <option value="1">Published</option>
+                                <option value="0">Draft</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Availability</label>
+                            <select class="form-select bg-light border-0" id="addAvailability">
+                                <option value="1">Available</option>
+                                <option value="0">Unavailable</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -376,10 +416,27 @@ $products = $productController->index();
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-3" id="editPriceFieldWrapper">
                                 <label class="form-label small fw-bold">Price (PHP)*</label>
                                 <input type="number" step="0.01" class="form-control bg-light border-0" id="editPrice" required>
                             </div>
+                        </div>
+
+                        <div id="editVariantsSection" class="mb-3" style="display:none;">
+                            <label class="form-label small fw-bold">Variant Pricing</label>
+                            <div class="table-responsive">
+                                <table class="table table-bordered mb-0">
+                                    <thead class="table-light">
+                                        <tr id="editVariantHeader"></tr>
+                                    </thead>
+                                    <tbody id="editVariantBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="mt-2">
+                                <span class="small fw-bold">Lowest Price: </span>
+                                <span id="editLowestPriceDisplay" class="small fw-bold" style="color: #D35400;">₱0.00</span>
+                            </div>
+                            <small class="text-muted">Set prices for each variant and size combination.</small>
                         </div>
 
                         <div class="mb-3">
@@ -388,11 +445,39 @@ $products = $productController->index();
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Status</label>
-                            <select class="form-select bg-light border-0" id="editStatus">
-                                <option value="1">Published</option>
-                                <option value="0">Draft</option>
-                            </select>
+                            <label class="form-label small fw-bold">Long Description*</label>
+                            <div id="edit-editor-container" style="height: 200px; border-radius: 0 0 8px 8px;"></div>
+                            <input type="hidden" name="edit_long_description" id="edit_long_description">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Status</label>
+                                <select class="form-select bg-light border-0" id="editStatus">
+                                    <option value="1">Published</option>
+                                    <option value="0">Draft</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Availability</label>
+                                <select class="form-select bg-light border-0" id="editAvailability">
+                                    <option value="1">Available</option>
+                                    <option value="0">Unavailable</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Featured Image</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <div id="edit-image-preview" class="rounded bg-light d-flex align-items-center justify-content-center border" style="width: 80px; height: 80px; overflow: hidden;">
+                                    <i class="bi bi-image text-muted fs-3"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <input type="file" class="form-control form-control-sm" id="editProductImage" accept="image/*">
+                                    <small class="text-muted">Leave empty to keep current image. Recommended: Square image (500x500px)</small>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-0 text-end pt-3">
@@ -429,7 +514,7 @@ $products = $productController->index();
     <script src="../src/assets/javascript/admin/top-navbar.js"></script>
     <script src="../src/assets/javascript/admin/rich-text-editor.js"></script>
     <script src="../src/assets/javascript/admin/shared.js"></script>
-    <script src="../src/assets/javascript/admin/inventory.js?v=2"></script>
+    <script src="../src/assets/javascript/admin/inventory.js?v=5"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-8DBwxvghb+f8w824cDtgFXtW+eLk+ifaFVIJ9ai0SyxgbpPzJblwXERQ8GHKq2ya" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
