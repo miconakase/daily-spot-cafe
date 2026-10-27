@@ -91,8 +91,22 @@ class User
 
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            // Check if password matches (handling both plain text for legacy and hashed for new)
-            if (password_verify($password, $row['password']) || $password === $row['password']) {
+            $stored = $row['password'];
+            $isHash = password_get_info($stored)['algo'] !== null;
+
+            if ($isHash) {
+                $valid = password_verify($password, $stored);
+            } else {
+                // Legacy plain-text password (old schema): accept once, then upgrade
+                $valid = hash_equals($stored, (string) $password);
+            }
+
+            if ($valid && (!$isHash || password_needs_rehash($stored, PASSWORD_DEFAULT))) {
+                $row['password'] = password_hash($password, PASSWORD_DEFAULT);
+                $this->updatePassword($row['user_id'], $row['password']);
+            }
+
+            if ($valid) {
                 $this->user_id = $row['user_id'];
                 $this->username = $row['username'];
                 $this->password = $row['password'];
@@ -102,6 +116,24 @@ class User
             }
         }
         return false;
+    }
+
+    public function updatePassword($userId, $passwordHash)
+    {
+        $query = "UPDATE " . $this->table_name . " SET password=? WHERE user_id=?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("si", $passwordHash, $userId);
+        return $stmt->execute();
+    }
+
+    public function findIdByUsername($username)
+    {
+        $query = "SELECT user_id FROM " . $this->table_name . " WHERE username = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        return $row ? (int)$row['user_id'] : null;
     }
 
     public function usernameExists($username)

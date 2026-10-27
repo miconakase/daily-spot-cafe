@@ -1,4 +1,41 @@
 <?php require_once 'auth/auth_check.php'; ?>
+<?php
+require_once '../src/controller/DashboardController.php';
+
+$dashboard = (new DashboardController())->getDashboard($_GET['range'] ?? '7d');
+$rangeLabel = $dashboard['range_label'];
+
+function peso($amount)
+{
+    return '₱' . number_format((float) $amount, 2);
+}
+
+/** "↑ 12% vs previous 7 days" with direction colour, or a neutral note when there is no baseline. */
+function deltaLine($delta, $rangeKey)
+{
+    $period = ['today' => 'yesterday', '7d' => 'previous 7 days', '30d' => 'previous 30 days'][$rangeKey];
+    if ($delta === null) {
+        return '<span class="text-muted">No sales in the ' . ($rangeKey === 'today' ? 'day' : 'period') . ' before to compare</span>';
+    }
+    if ($delta == 0) {
+        return '<span class="text-muted"><i class="bi bi-dash"></i> Same as ' . $period . '</span>';
+    }
+    $up = $delta > 0;
+    return '<span class="' . ($up ? 'text-success' : 'text-danger') . ' fw-semibold">'
+        . '<i class="bi bi-arrow-' . ($up ? 'up' : 'down') . '-short"></i>' . abs($delta) . '%</span>'
+        . ' <span class="text-muted">vs ' . $period . '</span>';
+}
+
+$statusBadge = [
+    'Pending'    => 'bg-warning-subtle text-warning',
+    'Processing' => 'bg-info-subtle text-info',
+    'Ready'      => 'bg-primary-subtle text-primary',
+    'Completed'  => 'bg-success-subtle text-success',
+    'Cancelled'  => 'bg-danger-subtle text-danger',
+];
+$topMax = max(array_map(fn($p) => (int) $p['quantity'], $dashboard['top_products']) ?: [1]);
+$totals = $dashboard['totals'];
+?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,146 +48,40 @@
     <link href="../src/assets/css/admin/left-side-bar.css" rel="stylesheet">
     <link href="../src/assets/css/admin/top-navbar.css" rel="stylesheet">
     <script>if(localStorage.getItem('sidebarCollapsed')==='true')document.documentElement.classList.add('sidebar-collapsed');</script>
+    <style>
+        .metric-sub { font-size: 0.85rem; }
+        .range-switch .btn { font-size: 0.85rem; }
+        .range-switch .btn.active { background: #3D2B1F; border-color: #3D2B1F; color: #fff; }
+
+        /* Daily gross sales chart */
+        .chart-wrap { position: relative; height: 240px; }
+        .chart-wrap svg { display: block; width: 100%; height: 100%; overflow: visible; }
+        .chart-grid { stroke: #ece4dc; stroke-width: 1; }
+        .chart-axis-text { fill: #8a7a70; font-size: 11px; }
+        .chart-bar { fill: #D35400; }
+        .chart-hit { fill: transparent; cursor: default; outline: none; }
+        .chart-hit:hover + .chart-bar, .chart-hit:focus + .chart-bar, .chart-bar.is-active { fill: #E67E22; }
+        .chart-hit:focus-visible { stroke: #3D2B1F; stroke-width: 1; }
+        .chart-tooltip { position: absolute; pointer-events: none; background: #fff; border: 1px solid #ece4dc;
+            border-radius: 6px; box-shadow: 0 4px 14px rgba(61,43,31,0.12); padding: 6px 10px; font-size: 0.8rem;
+            white-space: nowrap; transform: translate(-50%, -100%); display: none; }
+        .chart-tooltip strong { display: block; font-size: 0.95rem; color: #3D2B1F; }
+        .chart-tooltip span { color: #6c757d; }
+        .chart-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #8a7a70; font-size: 0.9rem; }
+
+        /* Top sellers meter: accent fill on a lighter step of the same hue */
+        .seller-track { height: 6px; background: #f8e3d4; border-radius: 3px; overflow: hidden; }
+        .seller-fill { height: 100%; background: #D35400; border-radius: 3px; }
+        .paid-split { height: 8px; background: #f8e3d4; border-radius: 4px; overflow: hidden; }
+        .paid-split div { height: 100%; background: #D35400; }
+    </style>
 </head>
 <body>
     <div class="dashboard-app">
-        <aside class="sidebar">
-            <div class="sidebar-brand mb-4 d-flex align-items-center gap-2">
-                <i class="bi bi-cup-hot-fill fs-4" style="color: #D35400;"></i>
-                <div class="h4 mb-0 brand-logo text-white">Daily Spot Cafe</div>
-            </div>
-            <div class="menu-card p-0">
-                <div class="list-group sidebar-nav">
-                    <a href="dashboard.php" class="list-group-item list-group-item-action active">
-                        <i class="nav-icon bi bi-house-door-fill"></i>
-                        <span class="nav-label">Dashboard</span>
-                    </a>
-                    <a href="orders.php" class="list-group-item list-group-item-action">
-                        <i class="nav-icon bi bi-box-seam-fill"></i>
-                        <span class="nav-label">Orders</span>
-                    </a>
-                    <div id="products-toggle" class="list-group-item list-group-item-action" 
-                        data-bs-toggle="collapse" 
-                        data-bs-target="#productsSubmenu" 
-                        aria-expanded="false" 
-                        style="cursor: pointer;">
-                        <div class="d-flex justify-content-between align-items-center w-100">
-                            <span>
-                                <i class="nav-icon bi bi-bag-fill me-2"></i>
-                                <span class="nav-label">Products</span>
-                            </span>
-                            <i id="products-arrow" class="bi bi-chevron-right small"></i>
-                        </div>
-                    </div>
-
-                    <div class="collapse" id="productsSubmenu">
-                        <div class="list-group list-group-flush ps-4">
-                           <a href="inventory.php" class="list-group-item list-group-item-action border-0 py-2 small">
-                                <i class="bi bi-archive"></i>
-                                Inventory
-                            </a>
-                            <a href="categories.php" class="list-group-item list-group-item-action border-0 py-2 small">
-                                <i class="bi bi-tags"></i>
-                                Categories
-                            </a>
-                        </div>
-                    </div>
-                    <a href="contacts.php" class="list-group-item list-group-item-action">
-                        <i class="nav-icon bi bi-people-fill"></i>
-                        <span class="nav-label">Contacts</span>
-                    </a>
-                </div>
-            </div>
-        </aside>
+        <?php $adminPage = 'dashboard'; include __DIR__ . '/includes/sidebar.php'; ?>
 
         <div class="dashboard-wrapper">
-            <nav class="top-navbar">
-                <div class="d-flex align-items-center justify-content-between">
-                    <i id="sidebarToggle" class="bi bi-layout-sidebar-inset fs-5" style="cursor: pointer;"></i>
-                    <div class="d-flex align-items-center gap-2 top-navbar-actions">
-                        <div class="notification-wrapper">
-                            <button type="button" class="btn btn-light btn-sm top-navbar-icon" id="notificationToggle">
-                                <i class="bi bi-bell"></i>
-                                <span class="notification-badge"></span>
-                            </button>
-                            <div class="notification-dropdown" id="notificationDropdown">
-                                <div class="notification-header">
-                                    <h6>Notifications</h6>
-                                    <span class="badge bg-primary-subtle text-primary small">3 New</span>
-                                </div>
-                                <div class="notification-body">
-                                    <a href="#" class="notification-item">
-                                        <div class="notification-icon-box icon-blue">
-                                            <i class="bi bi-cart-fill"></i>
-                                        </div>
-                                        <div class="notification-content">
-                                            <span class="notification-title">New Order Received</span>
-                                            <span class="notification-desc">Order #1234 has been placed by Kurt Angel.</span>
-                                            <span class="notification-time">2 mins ago</span>
-                                        </div>
-                                    </a>
-                                    <a href="#" class="notification-item">
-                                        <div class="notification-icon-box icon-orange">
-                                            <i class="bi bi-exclamation-triangle-fill"></i>
-                                        </div>
-                                        <div class="notification-content">
-                                            <span class="notification-title">Low Stock Alert</span>
-                                            <span class="notification-desc">Java Chip Frappuccino is running low on stock.</span>
-                                            <span class="notification-time">1 hour ago</span>
-                                        </div>
-                                    </a>
-                                    <a href="#" class="notification-item">
-                                        <div class="notification-icon-box icon-green">
-                                            <i class="bi bi-person-fill-check"></i>
-                                        </div>
-                                        <div class="notification-content">
-                                            <span class="notification-title">New User Registered</span>
-                                            <span class="notification-desc">A new customer has created an account.</span>
-                                            <span class="notification-time">5 hours ago</span>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="notification-footer">
-                                    <a href="notification.php">View All Notifications</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="profile-wrapper">
-                            <div class="profile-menu d-flex align-items-center gap-3" id="profileToggle">
-                                <div class="profile-avatar"><?php 
-                                    $names = explode(' ', trim($_SESSION['full_name'] ?? ''));
-                                    $initials = !empty($names[0]) ? strtoupper(substr($names[0], 0, 1)) : '';
-                                    if (count($names) > 1) {
-                                        $initials .= strtoupper(substr(end($names), 0, 1));
-                                    }
-                                    echo htmlspecialchars($initials);
-                                ?></div>
-                                <div class="d-none d-sm-flex align-items-center gap-2">
-                                    <div class="profile-text">
-                                        <span class="fw-bold"><?php echo htmlspecialchars($_SESSION['full_name']); ?></span>
-                                    </div>
-                                    <i class="bi bi-chevron-down small opacity-50"></i>
-                                </div>
-                            </div>
-                            <div class="profile-dropdown" id="profileDropdown">
-                                <div class="profile-info">
-                                    <span class="profile-info-name"><?php echo htmlspecialchars($_SESSION['full_name']); ?></span>
-                                    <span class="profile-info-email"><?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?></span>
-                                </div>
-                                <a href="account.php" class="profile-dropdown-item">
-                                    <i class="bi bi-person"></i>
-                                    My Account
-                                </a>
-                                <div class="profile-dropdown-divider"></div>
-                                <a href="logout.php" class="profile-dropdown-item logout-item">
-                                    <i class="bi bi-box-arrow-right"></i>
-                                    Logout
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            <?php include __DIR__ . '/includes/topbar.php'; ?>
 
             <main class="dashboard-main">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
@@ -159,74 +90,155 @@
                         <span class="dashboard-tooltip ms-2">
                             <i class="bi bi-question-circle-fill text-secondary" aria-hidden="true"></i>
                             <span class="dashboard-tooltip-text" role="tooltip">
-                                View a quick snapshot of your business performance—track sales, top-selling products, website visitor trends, and key reports all in one place.
+                                A quick snapshot of the cafe: sales, orders that need attention, best sellers and the latest orders. Cancelled orders are not counted in sales.
                             </span>
                         </span>
                     </h1>
                 </div>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm">Last 7 Days</button>
-                    <button type="button" class="btn btn-primary btn-sm">Add Reports</button>
+                <div class="btn-group range-switch" role="group" aria-label="Date range">
+                    <?php foreach (DashboardController::RANGES as $key => [$label]): ?>
+                        <a href="?range=<?= $key ?>" class="btn btn-outline-secondary btn-sm<?= $dashboard['range'] === $key ? ' active' : '' ?>"
+                           <?= $dashboard['range'] === $key ? 'aria-current="true"' : '' ?>><?= $label ?></a>
+                    <?php endforeach; ?>
                 </div>
             </div>
 
             <div class="row gy-4">
                 <div class="col-md-4">
                     <div class="dashboard-card p-3 h-100">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <div class="metric-label mb-2">Sales</div>
-                                <div class="metric-value">No Data Available</div>
+                                <div class="metric-value"><?= peso($dashboard['sales']) ?></div>
                             </div>
-                            <button type="button" class="btn btn-outline-dark btn-sm">View</button>
+                            <a href="orders.php" class="btn btn-outline-dark btn-sm">View</a>
                         </div>
-                        <p class="text-muted mb-0">Last 7 days</p>
+                        <div class="metric-sub"><?= deltaLine($dashboard['sales_delta'], $dashboard['range']) ?></div>
+                        <p class="text-muted mb-0 small mt-1"><?= $rangeLabel ?></p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="dashboard-card p-3 h-100">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <div class="metric-label mb-2">Orders</div>
-                                <div class="metric-value">No Data Available</div>
+                                <div class="metric-value"><?= number_format($dashboard['orders']) ?></div>
                             </div>
-                            <button type="button" class="btn btn-outline-dark btn-sm">View</button>
+                            <a href="orders.php" class="btn btn-outline-dark btn-sm">View</a>
                         </div>
-                        <p class="text-muted mb-0">Last 7 days</p>
+                        <div class="metric-sub"><?= deltaLine($dashboard['orders_delta'], $dashboard['range']) ?></div>
+                        <p class="text-muted mb-0 small mt-1"><?= $rangeLabel ?></p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="dashboard-card p-3 h-100">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <div class="metric-label mb-2">Unfulfilled Orders</div>
-                                <div class="metric-value">No Data Available</div>
+                                <div class="metric-value"><?= number_format($dashboard['unfulfilled']) ?></div>
                             </div>
-                            <button type="button" class="btn btn-outline-dark btn-sm">View</button>
+                            <a href="orders.php" class="btn btn-outline-dark btn-sm">View</a>
                         </div>
-                        <p class="text-muted mb-0">Last 7 days</p>
+                        <div class="metric-sub text-muted">
+                            <?php if ($dashboard['unfulfilled'] > 0): ?>
+                                <i class="bi bi-hourglass-split"></i> Pending, processing or ready for pickup
+                            <?php else: ?>
+                                <i class="bi bi-check2-circle"></i> All caught up
+                            <?php endif; ?>
+                        </div>
+                        <p class="text-muted mb-0 small mt-1">Right now</p>
                     </div>
                 </div>
             </div>
 
             <div class="row gy-4 mt-0">
-                <div class="col-md-6">
+                <div class="col-lg-7">
                     <div class="dashboard-card p-3 h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
                             <div class="card-header-sm">Daily Gross Sales</div>
+                            <span class="small text-muted"><?= count($dashboard['daily']) ?> days</span>
                         </div>
-                        <div class="border rounded-3" style="height: 240px; background: linear-gradient(180deg, #f8f9fa, #fff);"></div>
+                        <div class="chart-wrap mt-3" id="dailyChart" role="img" aria-label="Bar chart of daily gross sales; the same values are in the table below">
+                            <div class="chart-tooltip" id="chartTooltip" role="status"></div>
+                        </div>
+                        <details class="mt-3 small">
+                            <summary class="text-muted">View as table</summary>
+                            <table class="table table-sm mt-2 mb-0">
+                                <thead><tr><th>Date</th><th class="text-end">Orders</th><th class="text-end">Gross sales</th></tr></thead>
+                                <tbody>
+                                    <?php foreach (array_reverse($dashboard['daily']) as $day): ?>
+                                        <tr><td><?= htmlspecialchars($day['label']) ?></td><td class="text-end"><?= $day['orders'] ?></td><td class="text-end"><?= peso($day['sales']) ?></td></tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </details>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="dashboard-card p-3 h-100">
-                        <div class="card-header-sm mb-3">Total Sales</div>
-                        <div class="metric-value">No Data Available</div>
+                <div class="col-lg-5">
+                    <div class="dashboard-card p-3">
+                        <div class="card-header-sm mb-2">Total Sales</div>
+                        <div class="metric-value"><?= peso($totals['gross']) ?></div>
+                        <div class="small text-muted mb-3">All time &middot; <?= number_format($totals['orders']) ?> orders</div>
+                        <?php if ($totals['gross'] > 0): ?>
+                            <div class="paid-split mb-2" role="img" aria-label="<?= round($totals['paid'] / $totals['gross'] * 100) ?>% of sales collected">
+                                <div style="width: <?= round($totals['paid'] / $totals['gross'] * 100, 1) ?>%;"></div>
+                            </div>
+                        <?php endif; ?>
+                        <div class="d-flex justify-content-between small">
+                            <span><i class="bi bi-square-fill me-1" style="color:#D35400;"></i>Collected <strong><?= peso($totals['paid']) ?></strong></span>
+                            <span><i class="bi bi-square-fill me-1" style="color:#f8e3d4;"></i>Awaiting payment <strong><?= peso($totals['unpaid']) ?></strong></span>
+                        </div>
                     </div>
                     <div class="dashboard-card p-3 mt-4">
-                        <div class="card-header-sm mb-3">Top Selling Products</div>
-                        <div class="metric-value">No Data Available</div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="card-header-sm">Top Selling Products</div>
+                            <span class="small text-muted"><?= $rangeLabel ?></span>
+                        </div>
+                        <?php if (empty($dashboard['top_products'])): ?>
+                            <div class="text-muted small">No items sold in this period yet.</div>
+                        <?php endif; ?>
+                        <?php foreach ($dashboard['top_products'] as $i => $product): ?>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span><span class="text-muted me-1"><?= $i + 1 ?>.</span><span class="fw-semibold"><?= htmlspecialchars($product['product_name']) ?></span></span>
+                                    <span><strong><?= (int) $product['quantity'] ?></strong> sold &middot; <?= peso($product['revenue']) ?></span>
+                                </div>
+                                <div class="seller-track"><div class="seller-fill" style="width: <?= round($product['quantity'] / $topMax * 100, 1) ?>%;"></div></div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card p-3 mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="card-header-sm">Latest Orders</div>
+                    <a href="orders.php" class="btn btn-outline-dark btn-sm">View all</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr><th>Order</th><th>Customer</th><th>Placed</th><th>Total</th><th>Status</th><th>Payment</th></tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($dashboard['latest'])): ?>
+                                <tr><td colspan="6" class="text-center text-muted py-4">No orders yet</td></tr>
+                            <?php endif; ?>
+                            <?php foreach ($dashboard['latest'] as $order): ?>
+                                <tr>
+                                    <td>#<?= (int) $order['order_id'] ?></td>
+                                    <td><?= htmlspecialchars($order['customer_name'] !== '' ? $order['customer_name'] : '—') ?></td>
+                                    <td class="text-nowrap"><?= date('M j, g:i A', strtotime($order['created_at'])) ?></td>
+                                    <td><?= peso($order['total_amount']) ?></td>
+                                    <td><span class="badge <?= $statusBadge[$order['order_status']] ?? 'bg-secondary-subtle text-secondary' ?>"><?= htmlspecialchars($order['order_status']) ?></span></td>
+                                    <td>
+                                        <?= $order['payment_type'] === 'QRPH' ? 'QR PH' : htmlspecialchars($order['payment_type']) ?>
+                                        <span class="badge <?= $order['payment_status'] === 'Paid' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' ?>"><?= htmlspecialchars($order['payment_status']) ?></span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             </main>
@@ -235,8 +247,8 @@
 
     <script src="../src/assets/javascript/admin/left-side-bar.js?v=5"></script>
     <script src="../src/assets/javascript/admin/top-navbar.js"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-8DBwxvghb+f8w824cDtgFXtW+eLk+ifaFVIJ9ai0SyxgbpPzJblwXERQ8GHKq2ya" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>const DAILY_SALES = <?= json_encode($dashboard['daily']) ?>;</script>
+    <script src="../src/assets/javascript/admin/dashboard-chart.js"></script>
 </body>
 </html>

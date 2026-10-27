@@ -27,10 +27,11 @@ class Product
         $query = "INSERT INTO " . $this->table_name . " SET product_name=?, price=?, short_description=?, long_description=?, category_id=?, is_published=?, is_available=?, img_url=?";
         $stmt = $this->conn->prepare($query);
 
-        $this->product_name = htmlspecialchars(strip_tags($this->product_name));
+        $this->product_name = trim(strip_tags($this->product_name ?? ""));
         $this->price = htmlspecialchars(strip_tags($this->price));
-        $this->short_description = htmlspecialchars(strip_tags($this->short_description));
-        $this->long_description = htmlspecialchars($this->long_description);
+        $this->short_description = trim(strip_tags($this->short_description ?? ""));
+        // Rich text: ProductController stores it already cleaned by HtmlSanitizer
+        $this->long_description = (string) $this->long_description;
         $this->category_id = htmlspecialchars(strip_tags($this->category_id));
         $this->is_published = htmlspecialchars(strip_tags($this->is_published));
         $this->is_available = htmlspecialchars(strip_tags($this->is_available));
@@ -96,10 +97,11 @@ class Product
         $query = "UPDATE " . $this->table_name . " SET product_name=?, price=?, short_description=?, long_description=?, category_id=?, is_published=?, is_available=?, img_url=? WHERE product_id=?";
         $stmt = $this->conn->prepare($query);
 
-        $this->product_name = htmlspecialchars(strip_tags($this->product_name));
+        $this->product_name = trim(strip_tags($this->product_name ?? ""));
         $this->price = htmlspecialchars(strip_tags($this->price));
-        $this->short_description = htmlspecialchars(strip_tags($this->short_description));
-        $this->long_description = htmlspecialchars($this->long_description);
+        $this->short_description = trim(strip_tags($this->short_description ?? ""));
+        // Rich text: ProductController stores it already cleaned by HtmlSanitizer
+        $this->long_description = (string) $this->long_description;
         $this->category_id = htmlspecialchars(strip_tags($this->category_id));
         $this->is_published = htmlspecialchars(strip_tags($this->is_published));
         $this->is_available = htmlspecialchars(strip_tags($this->is_available));

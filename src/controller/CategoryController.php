@@ -71,12 +71,19 @@ class CategoryController
             return array('success' => false, 'message' => 'Category name is required');
         }
 
+        // Start from the saved row so fields the form didn't send keep their value
         $this->category->category_id   = $id;
+        $this->category->category_name = null;
+        $this->category->readOne();
+        if (empty($this->category->category_name)) {
+            return array('success' => false, 'message' => 'Category not found');
+        }
+
         $this->category->category_name = $data['category_name'];
-        $this->category->description   = $data['description']  ?? '';
-        $this->category->is_active     = isset($data['is_active'])    ? (int)$data['is_active']    : 1;
-        $this->category->has_variants  = isset($data['has_variants']) ? (int)$data['has_variants'] : 0;
-        $this->category->has_sizes     = isset($data['has_sizes'])    ? (int)$data['has_sizes']    : 0;
+        $this->category->description   = $data['description']  ?? $this->category->description;
+        $this->category->is_active     = isset($data['is_active'])    ? (int)$data['is_active']    : (int)$this->category->is_active;
+        $this->category->has_variants  = isset($data['has_variants']) ? (int)$data['has_variants'] : (int)$this->category->has_variants;
+        $this->category->has_sizes     = isset($data['has_sizes'])    ? (int)$data['has_sizes']    : (int)$this->category->has_sizes;
 
         if ($this->category->update()) {
             return array('success' => true, 'message' => 'Category updated successfully');

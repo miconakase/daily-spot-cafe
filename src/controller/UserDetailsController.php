@@ -140,9 +140,39 @@ class UserDetailsController
         return null;
     }
 
+    /** Validates and saves a customer's own profile, creating the row if needed. */
     public function updateProfile($userId, $data)
     {
-        return $this->update($userId, $data);
+        $fields = array();
+        foreach (['first_name', 'middle_name', 'last_name', 'suffix', 'phone_number', 'email'] as $f) {
+            $fields[$f] = trim($data[$f] ?? '');
+        }
+
+        if ($fields['first_name'] === '' || $fields['last_name'] === '') {
+            return array('success' => false, 'message' => 'First and last name are required.');
+        }
+        if (!filter_var($fields['email'], FILTER_VALIDATE_EMAIL)) {
+            return array('success' => false, 'message' => 'Please enter a valid email address.');
+        }
+        if ($fields['phone_number'] !== '' && !preg_match('/^[0-9+\-\s()]{7,20}$/', $fields['phone_number'])) {
+            return array('success' => false, 'message' => 'Please enter a valid phone number.');
+        }
+
+        $owner = $this->userDetails->findUserIdByEmail($fields['email']);
+        if ($owner && $owner !== (int)$userId) {
+            return array('success' => false, 'message' => 'That email is already used by another account.');
+        }
+
+        if ($this->show($userId)) {
+            $result = $this->update($userId, $fields);
+        } else {
+            $result = $this->store($fields + array('user_id' => $userId));
+        }
+
+        if ($result['success']) {
+            $result['message'] = 'Profile updated.';
+        }
+        return $result;
     }
 
     public function searchByEmail($email)

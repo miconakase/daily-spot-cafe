@@ -1,11 +1,15 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/admin_session.php';
 
-if (!isset($_SESSION['user_id'])) {
+// Customers share this session, so require the admin role, not just a login
+if (!is_admin_session()) {
     header("Location: /daily-spot-cafe/admin/auth/login.php");
     exit();
+}
+
+if (!is_same_origin_request()) {
+    http_response_code(403);
+    exit('Request blocked: cross-site request.');
 }
 
 // Ensure all details are in session (for users who were logged in before the update)

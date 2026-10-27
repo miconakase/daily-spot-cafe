@@ -9,6 +9,8 @@ class OrderItem
     public $order_item_id;
     public $order_id;
     public $product_id;
+    public $variant_type; // 'Hot', 'Iced', or NULL
+    public $size_label;   // 'Grande', 'Venti', or NULL
     public $quantity;
     public $unit_price;
 
@@ -19,10 +21,10 @@ class OrderItem
 
     public function create()
     {
-        $query = "INSERT INTO " . $this->table_name . " SET order_id=?, product_id=?, quantity=?, unit_price=?";
+        $query = "INSERT INTO " . $this->table_name . " SET order_id=?, product_id=?, variant_type=?, size_label=?, quantity=?, unit_price=?";
         $stmt = $this->conn->prepare($query);
 
-        $stmt->bind_param("iiid", $this->order_id, $this->product_id, $this->quantity, $this->unit_price);
+        $stmt->bind_param("iissid", $this->order_id, $this->product_id, $this->variant_type, $this->size_label, $this->quantity, $this->unit_price);
 
         if ($stmt->execute()) {
             $this->order_item_id = $this->conn->insert_id;
@@ -46,6 +48,14 @@ class OrderItem
         $stmt->bind_param("i", $order_id);
         $stmt->execute();
         return $stmt->get_result();
+    }
+
+    public function updateQuantity($order_item_id, $quantity)
+    {
+        $query = "UPDATE " . $this->table_name . " SET quantity=? WHERE order_item_id=?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("ii", $quantity, $order_item_id);
+        return $stmt->execute();
     }
 
     public function readOne()

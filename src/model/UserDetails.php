@@ -22,23 +22,22 @@ class UserDetails
 
     public function create()
     {
-        $query = "INSERT INTO " . $this->table_name . " SET first_name=?, middle_name=?, last_name=?, suffix=?, phone_number=?, email=?";
+        $query = "INSERT INTO " . $this->table_name . " SET user_id=?, first_name=?, middle_name=?, last_name=?, suffix=?, phone_number=?, email=?";
         $stmt = $this->conn->prepare($query);
 
-        $this->first_name = htmlspecialchars(strip_tags($this->first_name));
-        $this->middle_name = htmlspecialchars(strip_tags($this->middle_name));
-        $this->last_name = htmlspecialchars(strip_tags($this->last_name));
-        $this->suffix = htmlspecialchars(strip_tags($this->suffix));
-        $this->phone_number = htmlspecialchars(strip_tags($this->phone_number));
-        $this->email = htmlspecialchars(strip_tags($this->email));
+        // Stored as typed; pages escape on output
+        $this->sanitize();
 
-        $stmt->bind_param("ssssss", $this->first_name, $this->middle_name, $this->last_name, $this->suffix, $this->phone_number, $this->email);
+        $stmt->bind_param("issssss", $this->user_id, $this->first_name, $this->middle_name, $this->last_name, $this->suffix, $this->phone_number, $this->email);
 
-        if ($stmt->execute()) {
-            $this->user_id = $this->conn->insert_id;
-            return true;
+        return $stmt->execute();
+    }
+
+    private function sanitize()
+    {
+        foreach (['first_name', 'middle_name', 'last_name', 'suffix', 'phone_number', 'email'] as $field) {
+            $this->$field = trim(strip_tags($this->$field ?? ''));
         }
-        return false;
     }
 
     public function read()
@@ -73,12 +72,7 @@ class UserDetails
         $query = "UPDATE " . $this->table_name . " SET first_name=?, middle_name=?, last_name=?, suffix=?, phone_number=?, email=? WHERE user_id=?";
         $stmt = $this->conn->prepare($query);
 
-        $this->first_name = htmlspecialchars(strip_tags($this->first_name));
-        $this->middle_name = htmlspecialchars(strip_tags($this->middle_name));
-        $this->last_name = htmlspecialchars(strip_tags($this->last_name));
-        $this->suffix = htmlspecialchars(strip_tags($this->suffix));
-        $this->phone_number = htmlspecialchars(strip_tags($this->phone_number));
-        $this->email = htmlspecialchars(strip_tags($this->email));
+        $this->sanitize();
 
         $stmt->bind_param("ssssssi", $this->first_name, $this->middle_name, $this->last_name, $this->suffix, $this->phone_number, $this->email, $this->user_id);
 
@@ -91,6 +85,17 @@ class UserDetails
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $this->user_id);
         return $stmt->execute();
+    }
+
+    public function findUserIdByEmail($email)
+    {
+        $query = "SELECT user_id FROM " . $this->table_name . " WHERE email = ? LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+
+        return $row ? (int)$row['user_id'] : null;
     }
 
     public function getFullName()

@@ -1,3 +1,14 @@
+// Escapes text before inserting it into HTML
+function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = value == null ? '' : String(value);
+    return div.innerHTML.replace(/"/g, '&quot;');
+}
+
+function formatPeso(amount) {
+    return '₱' + Number(amount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function showToast(message, type) {
     const existing = document.querySelector('.toast-notification');
     if (existing) existing.remove();

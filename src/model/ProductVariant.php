@@ -29,8 +29,8 @@ class ProductVariant
         $stmt = $this->conn->prepare($query);
 
         $this->product_id   = (int) $this->product_id;
-        $this->variant_type = $this->variant_type !== null ? htmlspecialchars(strip_tags($this->variant_type)) : null;
-        $this->size_label   = $this->size_label   !== null ? htmlspecialchars(strip_tags($this->size_label))   : null;
+        $this->variant_type = $this->variant_type !== null ? trim(strip_tags($this->variant_type)) : null;
+        $this->size_label   = $this->size_label   !== null ? trim(strip_tags($this->size_label))   : null;
         $this->price        = (float) $this->price;
         $this->is_available = isset($this->is_available) ? (int) $this->is_available : 1;
 
@@ -61,6 +61,20 @@ class ProductVariant
         $stmt->bind_param("i", $product_id);
         $stmt->execute();
         return $stmt->get_result();
+    }
+
+    /**
+     * Find one variant row by its option combination; NULL options match NULL.
+     */
+    public function findOne($product_id, $variant_type, $size_label)
+    {
+        $query = "SELECT * FROM " . $this->table_name . "
+                  WHERE product_id = ? AND variant_type <=> ? AND size_label <=> ?
+                  LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("iss", $product_id, $variant_type, $size_label);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
     }
 
     /**

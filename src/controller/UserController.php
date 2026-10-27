@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../model/User.php';
 require_once __DIR__ . '/../model/UserDetails.php';
+require_once __DIR__ . '/../model/LoginAttempt.php';
 
 class UserController
 {
@@ -149,9 +150,23 @@ class UserController
         return array('success' => false, 'message' => 'Failed to delete user');
     }
 
+    /**
+     * On failure the response may include 'locked' => true and 'wait_seconds'
+     * once LOGIN_MAX_ATTEMPTS failures in a row lock the username.
+     */
     public function login($username, $password)
     {
+        $attempts = new LoginAttempt();
+        $key = strtolower(trim($username));
+
+        $wait = $attempts->secondsLocked($key);
+        if ($wait > 0) {
+            return array('success' => false, 'locked' => true, 'wait_seconds' => $wait,
+                'message' => "Too many failed attempts. Please wait $wait seconds before trying again.");
+        }
+
         if ($this->user->authenticate($username, $password)) {
+            $attempts->clear($key);
             // Get user details
             $userDetails = $this->getUserDetails($this->user->user_id);
 
@@ -168,7 +183,59 @@ class UserController
             );
         }
 
-        return array('success' => false, 'message' => 'Invalid username or password');
+        $lockedFor = $attempts->recordFailure($key);
+        if ($lockedFor > 0) {
+            return array('success' => false, 'locked' => true, 'wait_seconds' => $lockedFor,
+                'message' => "Too many failed attempts. Please wait $lockedFor seconds before trying again.");
+        }
+
+        $left = $attempts->attemptsLeft($key);
+        return array('success' => false,
+            'message' => 'Invalid username or password. ' . $left . ' attempt' . ($left === 1 ? '' : 's') . ' left.');
+    }
+
+    /** Customer self-registration (role_id 2). */
+    public function register($data)
+    {
+        $username  = trim($data['username'] ?? '');
+        $firstName = trim($data['first_name'] ?? '');
+        $lastName  = trim($data['last_name'] ?? '');
+        $email     = trim($data['email'] ?? '');
+        $phone     = trim($data['phone_number'] ?? '');
+        $password  = $data['password'] ?? '';
+        $confirm   = $data['confirm_password'] ?? '';
+
+        if (!preg_match('/^[A-Za-z0-9_.]{3,30}$/', $username)) {
+            return array('success' => false, 'message' => 'Username must be 3-30 characters: letters, numbers, dots or underscores.');
+        }
+        if ($firstName === '' || $lastName === '') {
+            return array('success' => false, 'message' => 'First and last name are required.');
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return array('success' => false, 'message' => 'Please enter a valid email address.');
+        }
+        if ($phone !== '' && !preg_match('/^[0-9+\-\s()]{7,20}$/', $phone)) {
+            return array('success' => false, 'message' => 'Please enter a valid phone number.');
+        }
+        if (strlen($password) < 8) {
+            return array('success' => false, 'message' => 'Password must be at least 8 characters.');
+        }
+        if ($password !== $confirm) {
+            return array('success' => false, 'message' => 'Passwords do not match.');
+        }
+        if ($this->userDetails->findUserIdByEmail($email)) {
+            return array('success' => false, 'message' => 'An account with that email already exists.');
+        }
+
+        return $this->store(array(
+            'username'     => $username,
+            'password'     => $password,
+            'role_id'      => 2,
+            'first_name'   => $firstName,
+            'last_name'    => $lastName,
+            'email'        => $email,
+            'phone_number' => $phone,
+        ));
     }
 
     public function changePassword($id, $currentPassword, $newPassword)

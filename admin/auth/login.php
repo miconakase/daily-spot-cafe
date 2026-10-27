@@ -1,8 +1,8 @@
 <?php
-session_start();
+require_once __DIR__ . '/admin_session.php';
 
-// If already logged in, redirect to dashboard
-if (isset($_SESSION['user_id'])) {
+// If already logged in as admin, redirect to dashboard
+if (is_admin_session()) {
     header("Location: ../dashboard.php");
     exit();
 }
@@ -24,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($response['user']['role_id'] != 1) {
                 $error = "Access denied. Administrator privileges required.";
             } else {
+                // New session ID on login so a planted one can't be reused
+                session_regenerate_id(true);
                 $_SESSION['user_id'] = $response['user']['user_id'];
                 $_SESSION['username'] = $response['user']['username'];
                 $_SESSION['role_id'] = $response['user']['role_id'];

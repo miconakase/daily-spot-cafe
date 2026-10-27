@@ -56,38 +56,7 @@
     </style>
 </head>
 <body>
-    <header style="background-color: #3D2B1F;">
-        <div class="container-fluid py-4 px-4">
-            <div class="d-flex align-items-center justify-content-between" style="padding: 0 5rem;">
-                <a href="../index.php" class="fs-3 brand-logo text-decoration-none" style="color: #fff;">Daily Spot Cafe</a>
-                <div class="d-flex align-items-center gap-5">
-                    <a href="../index.php" class="nav-link text-decoration-none" style="color: #fff; cursor: pointer;">Home</a>
-                    <a href="index.php" class="nav-link text-decoration-none" style="color: #D35400; cursor: pointer;">Menu</a>
-                    <a href="about.php" class="nav-link text-decoration-none" style="color: #fff; cursor: pointer;">About</a>
-                    <span class="nav-link" style="color: #fff; cursor: pointer;">Contact</span>
-                </div>
-                <div class="d-flex align-items-center gap-4 flex-shrink-0">
-                    <div class="cart-container" style="position: relative;">
-                        <i class="bi bi-cart3 fs-4" style="color: #fff; cursor: pointer;" id="cartIcon"></i>
-                        <span class="cart-badge" id="cartBadge">0</span>
-                    </div>
-                    <div class="user-container" style="position: relative;">
-                        <i class="bi bi-person-circle fs-4" style="color: #fff; cursor: pointer;" id="userIcon"></i>
-                        <div class="user-dropdown" id="userDropdown">
-                            <?php if ($loggedIn): ?>
-                                <div class="user-greeting">Hi, <?= htmlspecialchars($greeting) ?></div>
-                                <div class="user-dropdown-divider"></div>
-                                <a href="../auth/logout.php" class="user-dropdown-item"><i class="bi bi-box-arrow-right"></i>Logout</a>
-                            <?php else: ?>
-                                <a href="../auth/login.php?redirect=../page/index.php" class="user-dropdown-item"><i class="bi bi-box-arrow-in-right"></i>Login</a>
-                                <a href="../auth/signup.php" class="user-dropdown-item"><i class="bi bi-person-plus"></i>Sign Up</a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+    <?php $base = '../'; $active = 'menu'; $loginRedirect = '../page/index.php'; include __DIR__ . '/../includes/navbar.php'; ?>
 
     <section class="py-5">
         <div class="container py-4">
@@ -107,50 +76,7 @@
         </div>
     </section>
 
-    <footer style="background-color: #3D2B1F;">
-        <div class="container py-5">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <span class="brand-logo fs-4 d-block mb-3" style="color: #fff;">Daily Spot Cafe</span>
-                    <p style="color: #A1887F;">Your cozy neighborhood spot for handcrafted coffee, refreshing drinks, and warm conversations. Come find your new favorite place.</p>
-                    <div class="d-flex gap-3">
-                        <i class="bi bi-facebook fs-5" style="color: #A1887F; cursor: pointer;"></i>
-                        <i class="bi bi-instagram fs-5" style="color: #A1887F; cursor: pointer;"></i>
-                        <i class="bi bi-twitter-x fs-5" style="color: #A1887F; cursor: pointer;"></i>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <h6 class="fw-bold mb-3" style="color: #fff;">Quick Links</h6>
-                    <div class="d-flex flex-column gap-2">
-                        <a href="../index.php" class="text-decoration-none" style="color: #A1887F; cursor: pointer;">Home</a>
-                        <a href="index.php" class="text-decoration-none" style="color: #A1887F; cursor: pointer;">Menu</a>
-                        <a href="about.php" class="text-decoration-none" style="color: #A1887F; cursor: pointer;">About</a>
-                        <span style="color: #A1887F; cursor: pointer;">Contact</span>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <h6 class="fw-bold mb-3" style="color: #fff;">Opening Hours</h6>
-                    <div class="d-flex flex-column gap-2">
-                        <span style="color: #A1887F;">Mon - Fri: 7:00 AM - 9:00 PM</span>
-                        <span style="color: #A1887F;">Saturday: 8:00 AM - 10:00 PM</span>
-                        <span style="color: #A1887F;">Sunday: 8:00 AM - 8:00 PM</span>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <h6 class="fw-bold mb-3" style="color: #fff;">Contact</h6>
-                    <div class="d-flex flex-column gap-2">
-                        <span style="color: #A1887F;"><i class="bi bi-geo-alt me-2"></i>123 Cafe Street, Manila</span>
-                        <span style="color: #A1887F;"><i class="bi bi-telephone me-2"></i>(02) 1234 5678</span>
-                        <span style="color: #A1887F;"><i class="bi bi-envelope me-2"></i>hello@dailyspotcafe.com</span>
-                    </div>
-                </div>
-            </div>
-            <hr class="mt-4 mb-3" style="border-color: #5D4037;">
-            <div class="text-center">
-                <span style="color: #A1887F;">&copy; 2026 Daily Spot Cafe. All rights reserved.</span>
-            </div>
-        </div>
-    </footer>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/javascript/cart.js"></script>
@@ -184,16 +110,18 @@
             noProducts.style.display = 'none';
 
             filtered.forEach(p => {
-                const imgSrc = p.img_url ? '../' + p.img_url : 'https://placehold.co/400x300/E8D5C4/3D2B1F?text=No+Image';
+                const esc = CartManager.escape;
+                const imgSrc = esc(p.img_url ? "../" + p.img_url : "https://placehold.co/400x300/E8D5C4/3D2B1F?text=No+Image");
+                const name = esc(p.product_name);
                 const price = '₱' + parseFloat(p.price).toFixed(2);
-                const desc = p.short_description || '';
+                const desc = esc(p.short_description || "");
 
                 grid.innerHTML += `
                     <div class="col-md-6 col-lg-4">
                         <div class="card h-100 border-0 shadow-sm product-card" onclick="window.location='product.php?id=${p.product_id}'">
-                            <img src="${imgSrc}" class="card-img-top product-img" alt="${p.product_name}">
+                            <img src="${imgSrc}" class="card-img-top product-img" alt="${name}">
                             <div class="card-body d-flex flex-column">
-                                <h6 class="card-title fw-bold mb-1" style="color: #3D2B1F;">${p.product_name}</h6>
+                                <h6 class="card-title fw-bold mb-1" style="color: #3D2B1F;">${name}</h6>
                                 <p class="card-text small mb-2" style="color: #5D4037;">${desc}</p>
                                 <div class="mb-2">
                                     <i class="bi bi-star-fill" style="color: #FFB800; font-size: 0.85rem;"></i>
@@ -204,9 +132,13 @@
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mt-auto">
                                     <span class="fw-bold" style="color: #D35400; font-size: 1.1rem;">${price}</span>
-                                    <button class="btn btn-sm add-to-cart-btn" data-id="${p.product_id}" data-name="${p.product_name}" data-price="${p.price}" data-img="${imgSrc}" style="background-color: #3D2B1F; color: #fff; border-radius: 0;">
-                                        <i class="bi bi-cart-plus me-1"></i>Add to Cart
-                                    </button>
+                                    ${p.variants && p.variants.length
+                                        ? `<a href="product.php?id=${p.product_id}" class="btn btn-sm" style="background-color: #3D2B1F; color: #fff; border-radius: 0;">
+                                               <i class="bi bi-sliders me-1"></i>Choose Options
+                                           </a>`
+                                        : `<button class="btn btn-sm add-to-cart-btn" data-id="${p.product_id}" data-name="${name}" data-price="${p.price}" data-img="${imgSrc}" style="background-color: #3D2B1F; color: #fff; border-radius: 0;">
+                                               <i class="bi bi-cart-plus me-1"></i>Add to Cart
+                                           </button>`}
                                 </div>
                             </div>
                         </div>
@@ -218,7 +150,7 @@
         function buildFilters() {
             filters.innerHTML = '<button class="category-pill active" data-id="all">All</button>';
             categories.forEach(c => {
-                filters.innerHTML += `<button class="category-pill" data-id="${c.category_id}">${c.category_name}</button>`;
+                filters.innerHTML += `<button class="category-pill" data-id="${c.category_id}">${CartManager.escape(c.category_name)}</button>`;
             });
 
             filters.querySelectorAll('.category-pill').forEach(btn => {
@@ -234,28 +166,6 @@
         buildFilters();
         renderProducts(null);
     </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const userIcon = document.getElementById('userIcon');
-            const userDropdown = document.getElementById('userDropdown');
-            const cartIcon = document.getElementById('cartIcon');
-            if (userIcon && userDropdown) {
-                userIcon.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const isVisible = userDropdown.style.display === 'block';
-                    if (cartIcon) {
-                        const cartDropdown = document.getElementById('cartDropdown');
-                        if (cartDropdown) cartDropdown.style.display = 'none';
-                    }
-                    userDropdown.style.display = isVisible ? 'none' : 'block';
-                });
-                document.addEventListener('click', function(e) {
-                    if (!e.target.closest('.user-container')) {
-                        userDropdown.style.display = 'none';
-                    }
-                });
-            }
-        });
-    </script>
+    <script src="../assets/javascript/nav.js"></script>
 </body>
 </html>

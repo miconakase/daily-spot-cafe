@@ -15,6 +15,8 @@ class Database
             if (self::$conn->connect_error) {
                 die("Connection failed: " . self::$conn->connect_error);
             }
+            // Explicit so ₱, é, ñ work even where the server defaults to latin1 (e.g. XAMPP)
+            self::$conn->set_charset('utf8mb4');
         }
         return self::$conn;
     }

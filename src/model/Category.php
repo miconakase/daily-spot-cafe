@@ -24,8 +24,8 @@ class Category
         $query = "INSERT INTO " . $this->table_name . " SET category_name=?, description=?, is_active=?, has_variants=?, has_sizes=?";
         $stmt = $this->conn->prepare($query);
 
-        $this->category_name  = htmlspecialchars(strip_tags($this->category_name));
-        $this->description    = htmlspecialchars(strip_tags($this->description));
+        $this->category_name  = trim(strip_tags($this->category_name ?? ""));
+        $this->description    = trim(strip_tags($this->description ?? ""));
         $this->is_active      = (int) $this->is_active;
         $this->has_variants   = (int) ($this->has_variants ?? 0);
         $this->has_sizes      = (int) ($this->has_sizes ?? 0);
@@ -70,8 +70,8 @@ class Category
         $query = "UPDATE " . $this->table_name . " SET category_name=?, description=?, is_active=?, has_variants=?, has_sizes=? WHERE category_id=?";
         $stmt = $this->conn->prepare($query);
 
-        $this->category_name = htmlspecialchars(strip_tags($this->category_name));
-        $this->description   = htmlspecialchars(strip_tags($this->description));
+        $this->category_name = trim(strip_tags($this->category_name ?? ""));
+        $this->description   = trim(strip_tags($this->description ?? ""));
         $this->is_active     = (int) $this->is_active;
         $this->has_variants  = (int) ($this->has_variants ?? 0);
         $this->has_sizes     = (int) ($this->has_sizes ?? 0);

@@ -56,38 +56,7 @@ $greeting = $_SESSION['full_name'] ?? $_SESSION['username'] ?? '';
     </style>
 </head>
 <body>
-    <header style="background-color: #3D2B1F;">
-        <div class="container-fluid py-4 px-4">
-            <div class="d-flex align-items-center justify-content-between" style="padding: 0 5rem;">
-                <a href="../index.php" class="fs-3 brand-logo text-decoration-none" style="color: #fff;">Daily Spot Cafe</a>
-                <div class="d-flex align-items-center gap-5">
-                    <a href="../index.php" class="nav-link text-decoration-none" style="color: #fff; cursor: pointer;">Home</a>
-                    <a href="index.php" class="nav-link text-decoration-none" style="color: #fff; cursor: pointer;">Menu</a>
-                    <span class="nav-link" style="color: #D35400; cursor: pointer;">About</span>
-                    <span class="nav-link" style="color: #fff; cursor: pointer;">Contact</span>
-                </div>
-                <div class="d-flex align-items-center gap-4 flex-shrink-0">
-                    <div class="cart-container" style="position: relative;">
-                        <i class="bi bi-cart3 fs-4" style="color: #fff; cursor: pointer;" id="cartIcon"></i>
-                        <span class="cart-badge" id="cartBadge">0</span>
-                    </div>
-                    <div class="user-container" style="position: relative;">
-                        <i class="bi bi-person-circle fs-4" style="color: #fff; cursor: pointer;" id="userIcon"></i>
-                        <div class="user-dropdown" id="userDropdown">
-                            <?php if ($loggedIn): ?>
-                                <div class="user-greeting">Hi, <?= htmlspecialchars($greeting) ?></div>
-                                <div class="user-dropdown-divider"></div>
-                                <a href="../auth/logout.php" class="user-dropdown-item"><i class="bi bi-box-arrow-right"></i>Logout</a>
-                            <?php else: ?>
-                                <a href="../auth/login.php?redirect=../page/about.php" class="user-dropdown-item"><i class="bi bi-box-arrow-in-right"></i>Login</a>
-                                <a href="../auth/signup.php" class="user-dropdown-item"><i class="bi bi-person-plus"></i>Sign Up</a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+    <?php $base = '../'; $active = 'about'; $loginRedirect = '../page/about.php'; include __DIR__ . '/../includes/navbar.php'; ?>
 
     <section class="py-5 position-relative" style="background: url('../uploads/DSP_Hero.jpg') center center / cover no-repeat; min-height: 50vh; display: flex; align-items: center;">
         <div class="position-absolute top-0 start-0 w-100 h-100" style="background-color: rgba(0,0,0,0.55);"></div>
@@ -180,75 +149,10 @@ $greeting = $_SESSION['full_name'] ?? $_SESSION['username'] ?? '';
         </div>
     </section>
 
-    <footer style="background-color: #3D2B1F;">
-        <div class="container py-5">
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <span class="brand-logo fs-4 d-block mb-3" style="color: #fff;">Daily Spot Cafe</span>
-                    <p style="color: #A1887F;">Your cozy neighborhood spot for handcrafted coffee, refreshing drinks, and warm conversations. Come find your new favorite place.</p>
-                    <div class="d-flex gap-3">
-                        <i class="bi bi-facebook fs-5" style="color: #A1887F; cursor: pointer;"></i>
-                        <i class="bi bi-instagram fs-5" style="color: #A1887F; cursor: pointer;"></i>
-                        <i class="bi bi-twitter-x fs-5" style="color: #A1887F; cursor: pointer;"></i>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <h6 class="fw-bold mb-3" style="color: #fff;">Quick Links</h6>
-                    <div class="d-flex flex-column gap-2">
-                        <a href="../index.php" class="text-decoration-none" style="color: #A1887F; cursor: pointer;">Home</a>
-                        <a href="index.php" class="text-decoration-none" style="color: #A1887F; cursor: pointer;">Menu</a>
-                        <a href="about.php" class="text-decoration-none" style="color: #A1887F; cursor: pointer;">About</a>
-                        <span style="color: #A1887F; cursor: pointer;">Contact</span>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <h6 class="fw-bold mb-3" style="color: #fff;">Opening Hours</h6>
-                    <div class="d-flex flex-column gap-2">
-                        <span style="color: #A1887F;">Mon - Fri: 7:00 AM - 9:00 PM</span>
-                        <span style="color: #A1887F;">Saturday: 8:00 AM - 10:00 PM</span>
-                        <span style="color: #A1887F;">Sunday: 8:00 AM - 8:00 PM</span>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <h6 class="fw-bold mb-3" style="color: #fff;">Contact</h6>
-                    <div class="d-flex flex-column gap-2">
-                        <span style="color: #A1887F;"><i class="bi bi-geo-alt me-2"></i>123 Cafe Street, Manila</span>
-                        <span style="color: #A1887F;"><i class="bi bi-telephone me-2"></i>(02) 1234 5678</span>
-                        <span style="color: #A1887F;"><i class="bi bi-envelope me-2"></i>hello@dailyspotcafe.com</span>
-                    </div>
-                </div>
-            </div>
-            <hr class="mt-4 mb-3" style="border-color: #5D4037;">
-            <div class="text-center">
-                <span style="color: #A1887F;">&copy; 2026 Daily Spot Cafe. All rights reserved.</span>
-            </div>
-        </div>
-    </footer>
+    <?php include __DIR__ . '/../includes/footer.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/javascript/cart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const userIcon = document.getElementById('userIcon');
-            const userDropdown = document.getElementById('userDropdown');
-            const cartIcon = document.getElementById('cartIcon');
-            if (userIcon && userDropdown) {
-                userIcon.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const isVisible = userDropdown.style.display === 'block';
-                    if (cartIcon) {
-                        const cartDropdown = document.getElementById('cartDropdown');
-                        if (cartDropdown) cartDropdown.style.display = 'none';
-                    }
-                    userDropdown.style.display = isVisible ? 'none' : 'block';
-                });
-                document.addEventListener('click', function(e) {
-                    if (!e.target.closest('.user-container')) {
-                        userDropdown.style.display = 'none';
-                    }
-                });
-            }
-        });
-    </script>
+    <script src="../assets/javascript/nav.js"></script>
 </body>
 </html>

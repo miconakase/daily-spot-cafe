@@ -1,15 +1,21 @@
 <?php
 session_start();
+require_once __DIR__ . '/../includes/redirect.php';
 
 if (isset($_SESSION['user_id'])) {
-    $redirect = $_GET['redirect'] ?? '../page/index.php';
-    header("Location: $redirect");
+    header('Location: ' . safe_redirect($_GET['redirect'] ?? ''));
     exit;
 }
 
 require_once '../../src/controller/UserController.php';
 
 $error = '';
+$waitSeconds = 0;
+$notice = match ($_GET['notice'] ?? '') {
+    'reset' => 'Your password has been reset. Please log in with your new password.',
+    default => '',
+};
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
@@ -21,21 +27,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $response = $userController->login($username, $password);
 
         if ($response['success']) {
+            session_regenerate_id(true);
             $_SESSION['user_id'] = $response['user']['user_id'];
             $_SESSION['username'] = $response['user']['username'];
             $_SESSION['role_id'] = $response['user']['role_id'];
             $_SESSION['full_name'] = $response['user']['details']['full_name'] ?? $response['user']['username'];
+            $_SESSION['email'] = $response['user']['details']['email'] ?? '';
 
-            $redirect = $_POST['redirect'] ?? '../page/index.php';
-            header("Location: $redirect");
+            header('Location: ' . safe_redirect($_POST['redirect'] ?? ''));
             exit;
         } else {
             $error = $response['message'];
+            $waitSeconds = $response['wait_seconds'] ?? 0;
         }
     }
 }
 
-$redirectParam = $_GET['redirect'] ?? '../page/index.php';
+$redirectParam = safe_redirect($_POST['redirect'] ?? $_GET['redirect'] ?? '');
 ?>
 <!doctype html>
 <html lang="en">
@@ -69,7 +77,16 @@ $redirectParam = $_GET['redirect'] ?? '../page/index.php';
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
-                        <?php if ($error): ?>
+                        <?php if ($notice): ?>
+                            <div class="alert alert-success py-2 small" role="alert">
+                                <i class="bi bi-check-circle me-1"></i><?= htmlspecialchars($notice) ?>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($waitSeconds > 0): ?>
+                            <div class="alert alert-warning py-2 small" role="alert" id="lockoutAlert" data-seconds="<?= (int) $waitSeconds ?>">
+                                <i class="bi bi-hourglass-split me-1"></i>Too many failed attempts. Try again in <strong id="lockoutSeconds"><?= (int) $waitSeconds ?></strong> seconds.
+                            </div>
+                        <?php elseif ($error): ?>
                             <div class="alert alert-danger py-2 small" role="alert">
                                 <i class="bi bi-exclamation-circle me-1"></i><?= htmlspecialchars($error) ?>
                             </div>
@@ -83,17 +100,20 @@ $redirectParam = $_GET['redirect'] ?? '../page/index.php';
                                 <input type="text" class="form-control input-group-custom" id="username" name="username" placeholder="Enter your username" required>
                             </div>
 
-                            <div class="mb-4">
+                            <div class="mb-2">
                                 <label for="password" class="form-label small fw-bold" style="color: #3D2B1F;">Password</label>
                                 <input type="password" class="form-control input-group-custom" id="password" name="password" placeholder="Enter your password" required>
                             </div>
+                            <div class="text-end mb-4">
+                                <a href="forgot-password.php" class="auth-link small">Forgot password?</a>
+                            </div>
 
-                            <button type="submit" class="btn btn-login w-100">Sign In</button>
+                            <button type="submit" class="btn btn-login w-100" id="loginBtn">Sign In</button>
                         </form>
 
                         <div class="text-center mt-4">
                             <span style="color: #5D4037; font-size: 0.9rem;">Don't have an account? </span>
-                            <a href="signup.php" class="auth-link">Sign Up</a>
+                            <a href="signup.php?redirect=<?= urlencode($redirectParam) ?>" class="auth-link">Sign Up</a>
                         </div>
                     </div>
                 </div>
@@ -106,5 +126,26 @@ $redirectParam = $_GET['redirect'] ?? '../page/index.php';
             </div>
         </div>
     </div>
+    <script>
+        // Flowchart: show wait time -> wait -> back to login once it elapses
+        (function() {
+            const alertEl = document.getElementById('lockoutAlert');
+            if (!alertEl) return;
+            const btn = document.getElementById('loginBtn');
+            const counter = document.getElementById('lockoutSeconds');
+            let left = parseInt(alertEl.dataset.seconds, 10);
+            btn.disabled = true;
+            const timer = setInterval(() => {
+                left--;
+                counter.textContent = left;
+                if (left <= 0) {
+                    clearInterval(timer);
+                    btn.disabled = false;
+                    alertEl.className = 'alert alert-info py-2 small';
+                    alertEl.textContent = 'You can try logging in again now.';
+                }
+            }, 1000);
+        })();
+    </script>
 </body>
 </html>

@@ -14,6 +14,17 @@ const CartManager = {
         this.updateBadge();
     },
 
+    clear() {
+        this.saveItems([]);
+        this.renderDropdown();
+    },
+
+    escape(value) {
+        const div = document.createElement('div');
+        div.textContent = value == null ? '' : String(value);
+        return div.innerHTML.replace(/"/g, '&quot;');
+    },
+
     _key(item) {
         const v = item.variant_type || '';
         const s = item.size_label || '';
@@ -95,12 +106,13 @@ const CartManager = {
                 const vk = this._key(item).replace(/^\d+_/, '');
                 const img = item.img_url || 'https://placehold.co/60x60/E8D5C4/3D2B1F?text=N';
                 const variantText = [item.variant_type, item.size_label].filter(Boolean).join(', ');
+                const name = this.escape(item.product_name);
                 html += `
-                    <div class="cart-item" data-pid="${item.product_id}" data-vk="${vk}">
-                        <img src="${img}" class="cart-item-img" alt="${item.product_name}">
+                    <div class="cart-item" data-pid="${item.product_id}" data-vk="${this.escape(vk)}">
+                        <img src="${this.escape(img)}" class="cart-item-img" alt="${name}">
                         <div class="cart-item-info">
-                            <div class="cart-item-name">${item.product_name}</div>
-                            ${variantText ? `<div class="cart-item-variant">${variantText}</div>` : ''}
+                            <div class="cart-item-name">${name}</div>
+                            ${variantText ? `<div class="cart-item-variant">${this.escape(variantText)}</div>` : ''}
                             <div class="cart-item-price">₱${parseFloat(item.price).toFixed(2)}</div>
                         </div>
                         <div class="cart-item-qty">
@@ -194,9 +206,9 @@ const CartManager = {
             const btn = e.target.closest('.btn-checkout');
             if (btn) {
                 e.preventDefault();
-                alert('Checkout feature coming soon!');
-                const dd = document.getElementById('cartDropdown');
-                if (dd) dd.style.display = 'none';
+                if (this.getItems().length === 0) return;
+                const container = document.querySelector('.cart-container');
+                window.location.href = container?.dataset.checkoutUrl || 'checkout.php';
             }
         });
 

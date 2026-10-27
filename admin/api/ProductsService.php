@@ -1,6 +1,6 @@
 <?php
-session_start();
-header('Content-Type: application/json');
+// Admin login + same-site check; also sets the JSON content type
+require_once __DIR__ . '/../auth/api_guard.php';
 
 require_once __DIR__ . '/../../src/controller/ProductController.php';
 

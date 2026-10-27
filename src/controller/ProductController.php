@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../model/Product.php';
 require_once __DIR__ . '/../model/Category.php';
 require_once __DIR__ . '/../controller/ProductVariantController.php';
+require_once __DIR__ . '/../helpers/HtmlSanitizer.php';
 
 class ProductController
 {
@@ -76,7 +77,7 @@ class ProductController
         $this->product->product_name = $data['product_name'];
         $this->product->price = $data['price'] ?? 0;
         $this->product->short_description = $data['short_description'];
-        $this->product->long_description = $data['long_description'];
+        $this->product->long_description = $this->cleanDescription($data['long_description']);
         $this->product->category_id = $data['category_id'];
         $this->product->is_published = isset($data['is_published']) ? (int)$data['is_published'] : 1;
         $this->product->is_available = isset($data['is_available']) ? (int)$data['is_available'] : 1;
@@ -112,25 +113,43 @@ class ProductController
         return array('success' => false, 'message' => 'Failed to create product');
     }
 
+    /** Keeps the editor's formatting, drops anything unsafe; an empty editor becomes ''. */
+    private function cleanDescription($html)
+    {
+        $clean = HtmlSanitizer::clean($html);
+        return HtmlSanitizer::isBlank($clean) ? '' : $clean;
+    }
+
     private function uploadImage($file)
     {
-        $allowed = array('jpg', 'jpeg', 'png', 'gif');
-        $filename = $file['name'];
-        $file_ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-        
-        if (!in_array($file_ext, $allowed)) {
-            return array('success' => false, 'message' => 'Only JPG, PNG, and GIF images allowed');
+        // Extension comes from the detected image type, never the uploaded name
+        $allowed = array(
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        );
+
+        if (!is_uploaded_file($file['tmp_name'])) {
+            return array('success' => false, 'message' => 'Invalid upload');
         }
-        
+
         if ($file['size'] > 5 * 1024 * 1024) {
             return array('success' => false, 'message' => 'Image too large. Max 5MB');
         }
-        
+
+        // Reads the file's actual contents, so a renamed script is rejected
+        $info = @getimagesize($file['tmp_name']);
+        if ($info === false || !isset($allowed[$info['mime']])) {
+            return array('success' => false, 'message' => 'Only JPG, PNG, GIF and WebP images allowed');
+        }
+        $file_ext = $allowed[$info['mime']];
+
         $new_filename = uniqid('product_', true) . '.' . $file_ext;
         $upload_dir = __DIR__ . '/../../public/uploads/products/';
-        
+
         if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
+            mkdir($upload_dir, 0755, true);
         }
         
         $upload_path = $upload_dir . $new_filename;
@@ -164,7 +183,9 @@ class ProductController
         $this->product->product_name = $data['product_name'] ?? $this->product->product_name;
         $this->product->price = $data['price'] ?? $this->product->price;
         $this->product->short_description = $data['short_description'] ?? $this->product->short_description;
-        $this->product->long_description = $data['long_description'] ?? $this->product->long_description;
+        if (isset($data['long_description'])) {
+            $this->product->long_description = $this->cleanDescription($data['long_description']);
+        }
         $this->product->category_id = $data['category_id'] ?? $this->product->category_id;
         $this->product->is_published = isset($data['is_published']) ? (int)$data['is_published'] : $this->product->is_published;
         $this->product->is_available = isset($data['is_available']) ? (int)$data['is_available'] : $this->product->is_available;

@@ -10,6 +10,7 @@ class Order
     public $user_id;
     public $payment_status;
     public $payment_type;
+    public $reference_number;
     public $total_amount;
     public $order_status;
     public $notes;
@@ -23,20 +24,22 @@ class Order
     public function create()
     {
         $query = "INSERT INTO " . $this->table_name . "
-                  SET user_id=?, payment_status=?, payment_type=?, total_amount=?, order_status=?, notes=?";
+                  SET user_id=?, payment_status=?, payment_type=?, reference_number=?, total_amount=?, order_status=?, notes=?";
         $stmt = $this->conn->prepare($query);
 
         $this->payment_status = htmlspecialchars(strip_tags($this->payment_status ?? 'Pending'));
         $this->payment_type   = htmlspecialchars(strip_tags($this->payment_type   ?? 'COD'));
         $this->total_amount   = htmlspecialchars(strip_tags($this->total_amount));
         $this->order_status   = htmlspecialchars(strip_tags($this->order_status   ?? 'Pending'));
-        $this->notes          = htmlspecialchars(strip_tags($this->notes ?? ''));
+        // Free text is stored as typed; pages escape on output
+        $this->notes          = trim(strip_tags($this->notes ?? ''));
 
         $stmt->bind_param(
-            "issdss",
+            "isssdss",
             $this->user_id,
             $this->payment_status,
             $this->payment_type,
+            $this->reference_number,
             $this->total_amount,
             $this->order_status,
             $this->notes
@@ -79,6 +82,7 @@ class Order
             $this->user_id        = $row['user_id'];
             $this->payment_status = $row['payment_status'];
             $this->payment_type   = $row['payment_type'];
+            $this->reference_number = $row['reference_number'];
             $this->total_amount   = $row['total_amount'];
             $this->order_status   = $row['order_status'];
             $this->notes          = $row['notes'];
@@ -97,7 +101,7 @@ class Order
         $this->payment_type   = htmlspecialchars(strip_tags($this->payment_type));
         $this->total_amount   = htmlspecialchars(strip_tags($this->total_amount));
         $this->order_status   = htmlspecialchars(strip_tags($this->order_status));
-        $this->notes          = htmlspecialchars(strip_tags($this->notes ?? ''));
+        $this->notes          = trim(strip_tags($this->notes ?? ''));
 
         $stmt->bind_param(
             "ssdssi",
@@ -118,6 +122,15 @@ class Order
         $stmt = $this->conn->prepare($query);
         $stmt->bind_param("i", $this->order_id);
         return $stmt->execute();
+    }
+
+    public function readByUser($user_id)
+    {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE user_id = ? ORDER BY created_at DESC, order_id DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        return $stmt->get_result();
     }
 
     public function getOrdersByStatus($status)
