@@ -76,3 +76,57 @@ body { font-family: 'Inter', sans-serif; background: #FDF8F4; }
 
 .qr-box { width: 220px; height: 220px; margin: 0 auto; border: 2px dashed #A1887F; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #5D4037; background: #fff; }
 .qr-box img { width: 100%; height: 100%; object-fit: contain; }
+
+/* ---------------------------------------------------------------- Navbar */
+.site-header { position: relative; z-index: 1040; }
+.site-nav { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1.5rem 5rem; }
+.site-brand { font-size: 1.75rem; white-space: nowrap; }
+.site-links { display: flex; align-items: center; gap: 3rem; }
+.site-actions { gap: 1.5rem; }
+.cart-container, .user-container { position: relative; }
+.nav-toggle { display: none; background: none; border: 0; color: #fff; font-size: 1.75rem; line-height: 1; padding: 0.25rem; }
+.nav-toggle:focus-visible { outline: 2px solid #D35400; outline-offset: 2px; }
+
+/* Tablets: tighter bar */
+@media (max-width: 1199.98px) {
+    .site-nav { padding: 1.25rem 2rem; }
+    .site-links { gap: 2rem; }
+}
+
+/* Phones and small tablets: links fold into a panel under the bar */
+@media (max-width: 991.98px) {
+    .site-nav { padding: 0.875rem 1rem; }
+    .site-brand { font-size: 1.4rem; }
+    .site-actions { gap: 1.25rem; }
+    .nav-toggle { display: block; }
+    .site-links {
+        display: none; order: 3; width: 100%;
+        flex-direction: column; align-items: stretch; gap: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .site-links.open { display: flex; }
+    .site-links .nav-link { padding: 0.85rem 0.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+}
+
+/* Small phones: dropdowns span the screen instead of hanging off the left edge */
+@media (max-width: 575.98px) {
+    .site-actions .cart-container, .site-actions .user-container { position: static; }
+    .site-header .cart-dropdown, .site-header .user-dropdown { left: 0.75rem; right: 0.75rem; width: auto; margin-top: 0; }
+    .site-header .cart-dropdown-body { max-height: 50vh; }
+}
+
+/* ----------------------------------------------------------------- Pages */
+@media (max-width: 767.98px) {
+    /* Hero headings: Bootstrap's display sizes are too big for phones */
+    .display-3 { font-size: 2.25rem; line-height: 1.15; }
+    .display-5 { font-size: 1.85rem; }
+    .fs-5 { font-size: 1.05rem !important; }
+    .btn-lg.px-5 { padding-left: 2rem !important; padding-right: 2rem !important; }
+    section.py-5 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+    .container.py-4 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+
+    /* Product page photo and menu cards */
+    .product-photo { height: 280px !important; }
+    .product-img { height: 220px; }
+    .category-pill { padding: 6px 16px; font-size: 0.9rem; }
+}

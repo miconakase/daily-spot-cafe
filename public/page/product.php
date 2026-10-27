@@ -75,6 +75,7 @@ if (HtmlSanitizer::isBlank($description)) {
         .product-description p:last-child, .product-description ul:last-child, .product-description ol:last-child { margin-bottom: 0; }
         .product-description a { color: #D35400; }
     </style>
+    <link href="../assets/css/site.css" rel="stylesheet">
 </head>
 <body>
     <?php $base = '../'; $active = 'menu'; $loginRedirect = '../page/product.php?id=' . $product['product_id']; include __DIR__ . '/../includes/navbar.php'; ?>
@@ -89,9 +90,9 @@ if (HtmlSanitizer::isBlank($description)) {
                 <div class="col-md-6">
                     <div class="rounded overflow-hidden">
                         <?php if ($product['img_url']): ?>
-                            <img src="../<?= htmlspecialchars($product['img_url']) ?>" class="img-fluid w-100" alt="<?= htmlspecialchars($product['product_name']) ?>" style="height: 450px; object-fit: cover;">
+                            <img src="../<?= htmlspecialchars($product['img_url']) ?>" class="img-fluid w-100 product-photo" alt="<?= htmlspecialchars($product['product_name']) ?>" style="height: 450px; object-fit: cover;">
                         <?php else: ?>
-                            <div class="d-flex align-items-center justify-content-center bg-light" style="height: 450px;">
+                            <div class="d-flex align-items-center justify-content-center bg-light product-photo" style="height: 450px;">
                                 <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
                             </div>
                         <?php endif; ?>

@@ -49,6 +49,7 @@
         .user-dropdown-item:hover { background: #FDF8F4; color: #3D2B1F; }
         .user-dropdown-item i { margin-right: 8px; width: 16px; }
     </style>
+    <link href="assets/css/site.css" rel="stylesheet">
 </head>
 <body>
     <?php $base = ''; $active = 'home'; $loginRedirect = '../index.php'; include __DIR__ . '/includes/navbar.php'; ?>

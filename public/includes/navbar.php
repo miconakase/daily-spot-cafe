@@ -17,21 +17,21 @@ $navLinks = [
     'contact' => ['Contact', $base . 'page/contact.php'],
 ];
 ?>
-<header style="background-color: #3D2B1F;">
-    <div class="container-fluid py-4 px-4">
-        <div class="d-flex align-items-center justify-content-between" style="padding: 0 5rem;">
-            <a href="<?= $base ?>index.php" class="fs-3 brand-logo text-decoration-none" style="color: #fff;">Daily Spot Cafe</a>
-            <div class="d-flex align-items-center gap-5">
+<header class="site-header" style="background-color: #3D2B1F;">
+        <div class="site-nav">
+            <a href="<?= $base ?>index.php" class="site-brand brand-logo text-decoration-none" style="color: #fff;">Daily Spot Cafe</a>
+            <!-- Inline on desktop; a drop-down panel under the bar on phones (toggled in nav.js) -->
+            <nav class="site-links" id="siteLinks" aria-label="Main">
                 <?php foreach ($navLinks as $key => [$label, $href]): ?>
-                    <a href="<?= $href ?>" class="nav-link text-decoration-none" style="color: <?= $active === $key ? '#D35400' : '#fff' ?>; cursor: pointer;"><?= $label ?></a>
+                    <a href="<?= $href ?>" class="nav-link text-decoration-none" style="color: <?= $active === $key ? '#D35400' : '#fff' ?>; cursor: pointer;"<?= $active === $key ? ' aria-current="page"' : '' ?>><?= $label ?></a>
                 <?php endforeach; ?>
-            </div>
-            <div class="d-flex align-items-center gap-4 flex-shrink-0">
-                <div class="cart-container" style="position: relative;" data-checkout-url="<?= $base ?>page/checkout.php">
+            </nav>
+            <div class="site-actions d-flex align-items-center flex-shrink-0">
+                <div class="cart-container" data-checkout-url="<?= $base ?>page/checkout.php">
                     <i class="bi bi-cart3 fs-4" style="color: #fff; cursor: pointer;" id="cartIcon"></i>
                     <span class="cart-badge" id="cartBadge">0</span>
                 </div>
-                <div class="user-container" style="position: relative;">
+                <div class="user-container">
                     <i class="bi bi-person-circle fs-4" style="color: #fff; cursor: pointer;" id="userIcon"></i>
                     <div class="user-dropdown" id="userDropdown">
                         <?php if ($navLoggedIn): ?>
@@ -47,7 +47,9 @@ $navLinks = [
                         <?php endif; ?>
                     </div>
                 </div>
+                <button type="button" class="nav-toggle" id="navToggle" aria-controls="siteLinks" aria-expanded="false" aria-label="Open menu">
+                    <i class="bi bi-list"></i>
+                </button>
             </div>
         </div>
-    </div>
 </header>
