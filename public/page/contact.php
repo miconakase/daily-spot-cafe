@@ -2,6 +2,8 @@
 session_start();
 require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../../src/controller/MessageController.php';
+require_once __DIR__ . '/../../src/config/app.php';
+$store = array_map('htmlspecialchars', STORE);
 
 $result = null;
 $values = ['name' => '', 'email' => '', 'subject' => '', 'message' => ''];
@@ -82,15 +84,19 @@ $pageTitle = 'Contact Us';
                     <div class="card card-brand p-4 h-100">
                         <h5 class="fw-bold text-dark-brown mb-3">Visit or call us</h5>
                         <div class="d-flex flex-column gap-3 text-brown">
-                            <div><i class="bi bi-geo-alt me-2 text-accent"></i>123 Cafe Street, Manila</div>
-                            <div><i class="bi bi-telephone me-2 text-accent"></i>(02) 1234 5678</div>
-                            <div><i class="bi bi-envelope me-2 text-accent"></i>hello@dailyspotcafe.com</div>
+                            <div class="d-flex"><i class="bi bi-geo-alt me-2 text-accent"></i><span><?= $store['address'] ?><br><small class="text-muted"><?= $store['landmark'] ?></small></span></div>
+                            <div><i class="bi bi-telephone me-2 text-accent"></i><a href="tel:<?= $store['phone'] ?>" class="text-brown text-decoration-none"><?= $store['phone'] ?></a></div>
+                            <div><i class="bi bi-envelope me-2 text-accent"></i><a href="mailto:<?= $store['email'] ?>" class="text-brown text-decoration-none"><?= $store['email'] ?></a></div>
                         </div>
                         <h6 class="fw-bold text-dark-brown mt-4 mb-2">Opening Hours</h6>
                         <div class="d-flex flex-column gap-1 text-brown small">
-                            <span>Mon - Fri: 7:00 AM - 9:00 PM</span>
-                            <span>Saturday: 8:00 AM - 10:00 PM</span>
-                            <span>Sunday: 8:00 AM - 8:00 PM</span>
+                            <span><?= $store['days'] ?>: <?= $store['hours'] ?></span>
+                            <span><?= $store['closed'] ?></span>
+                        </div>
+                        <h6 class="fw-bold text-dark-brown mt-4 mb-2">Follow us</h6>
+                        <div class="d-flex flex-column gap-1 small">
+                            <a href="<?= $store['facebook'] ?>" target="_blank" rel="noopener" class="text-brown text-decoration-none"><i class="bi bi-facebook me-2 text-accent"></i>Facebook</a>
+                            <a href="<?= $store['instagram'] ?>" target="_blank" rel="noopener" class="text-brown text-decoration-none"><i class="bi bi-instagram me-2 text-accent"></i>@dailyspotcafe_byrcnts</a>
                         </div>
                     </div>
                 </div>

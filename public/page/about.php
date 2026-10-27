@@ -2,6 +2,8 @@
 session_start();
 $loggedIn = isset($_SESSION['user_id']);
 $greeting = $_SESSION['full_name'] ?? $_SESSION['username'] ?? '';
+require_once __DIR__ . '/../../src/config/app.php';
+$store = array_map('htmlspecialchars', STORE);
 ?>
 <!doctype html>
 <html lang="en">
@@ -128,21 +130,21 @@ $greeting = $_SESSION['full_name'] ?? $_SESSION['username'] ?? '';
                     <div class="text-center p-4">
                         <i class="bi bi-geo-alt fs-1 mb-3" style="color: #D35400;"></i>
                         <h6 class="fw-bold" style="color: #3D2B1F;">Address</h6>
-                        <p class="mb-0" style="color: #5D4037;">123 Cafe Street<br>Manila, Philippines</p>
+                        <p class="mb-0" style="color: #5D4037;"><?= $store['address'] ?><br><small><?= $store['landmark'] ?></small></p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="text-center p-4">
                         <i class="bi bi-clock fs-1 mb-3" style="color: #D35400;"></i>
                         <h6 class="fw-bold" style="color: #3D2B1F;">Opening Hours</h6>
-                        <p class="mb-0" style="color: #5D4037;">Mon - Fri: 7:00 AM - 9:00 PM<br>Saturday: 8:00 AM - 10:00 PM<br>Sunday: 8:00 AM - 8:00 PM</p>
+                        <p class="mb-0" style="color: #5D4037;"><?= $store['days'] ?><br><?= $store['hours'] ?><br><small><?= $store['closed'] ?></small></p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="text-center p-4">
                         <i class="bi bi-envelope fs-1 mb-3" style="color: #D35400;"></i>
                         <h6 class="fw-bold" style="color: #3D2B1F;">Contact</h6>
-                        <p class="mb-0" style="color: #5D4037;">(02) 1234 5678<br>hello@dailyspotcafe.com</p>
+                        <p class="mb-0" style="color: #5D4037;"><a href="tel:<?= $store['phone'] ?>" class="text-decoration-none" style="color: #5D4037;"><?= $store['phone'] ?></a><br><a href="mailto:<?= $store['email'] ?>" class="text-decoration-none" style="color: #5D4037;"><?= $store['email'] ?></a></p>
                     </div>
                 </div>
             </div>
