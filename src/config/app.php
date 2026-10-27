@@ -24,7 +24,8 @@ define('STORE', [
     'days'     => 'Tuesday to Sunday',
     'hours'    => '5:00 PM - 12:00 AM',
     'closed'   => 'Closed on Mondays',
-    'phone'    => '098593863628',
+    'phone'      => '0981 280 4339',
+    'phone_link' => '+639812804339', // for tel: links
     'email'    => 'dailyspotcafe8@gmail.com',
     'facebook'  => 'https://www.facebook.com/profile.php?id=61575421206584',
     'instagram' => 'https://www.instagram.com/dailyspotcafe_byrcnts/',

@@ -85,7 +85,7 @@ $pageTitle = 'Contact Us';
                         <h5 class="fw-bold text-dark-brown mb-3">Visit or call us</h5>
                         <div class="d-flex flex-column gap-3 text-brown">
                             <div class="d-flex"><i class="bi bi-geo-alt me-2 text-accent"></i><span><?= $store['address'] ?><br><small class="text-muted"><?= $store['landmark'] ?></small></span></div>
-                            <div><i class="bi bi-telephone me-2 text-accent"></i><a href="tel:<?= $store['phone'] ?>" class="text-brown text-decoration-none"><?= $store['phone'] ?></a></div>
+                            <div><i class="bi bi-telephone me-2 text-accent"></i><a href="tel:<?= $store['phone_link'] ?>" class="text-brown text-decoration-none"><?= $store['phone'] ?></a></div>
                             <div><i class="bi bi-envelope me-2 text-accent"></i><a href="mailto:<?= $store['email'] ?>" class="text-brown text-decoration-none"><?= $store['email'] ?></a></div>
                         </div>
                         <h6 class="fw-bold text-dark-brown mt-4 mb-2">Opening Hours</h6>

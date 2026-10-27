@@ -38,7 +38,7 @@ $footerStore = array_map('htmlspecialchars', STORE);
                 <h6 class="fw-bold mb-3" style="color: #fff;">Contact</h6>
                 <div class="d-flex flex-column gap-2">
                     <span class="d-flex" style="color: #A1887F;"><i class="bi bi-geo-alt me-2"></i><span><?= $footerStore['address'] ?><br><small><?= $footerStore['landmark'] ?></small></span></span>
-                    <a href="tel:<?= $footerStore['phone'] ?>" class="text-decoration-none" style="color: #A1887F;"><i class="bi bi-telephone me-2"></i><?= $footerStore['phone'] ?></a>
+                    <a href="tel:<?= $footerStore['phone_link'] ?>" class="text-decoration-none" style="color: #A1887F;"><i class="bi bi-telephone me-2"></i><?= $footerStore['phone'] ?></a>
                     <a href="mailto:<?= $footerStore['email'] ?>" class="text-decoration-none" style="color: #A1887F;"><i class="bi bi-envelope me-2"></i><?= $footerStore['email'] ?></a>
                 </div>
             </div>

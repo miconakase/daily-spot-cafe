@@ -144,7 +144,7 @@ $store = array_map('htmlspecialchars', STORE);
                     <div class="text-center p-4">
                         <i class="bi bi-envelope fs-1 mb-3" style="color: #D35400;"></i>
                         <h6 class="fw-bold" style="color: #3D2B1F;">Contact</h6>
-                        <p class="mb-0" style="color: #5D4037;"><a href="tel:<?= $store['phone'] ?>" class="text-decoration-none" style="color: #5D4037;"><?= $store['phone'] ?></a><br><a href="mailto:<?= $store['email'] ?>" class="text-decoration-none" style="color: #5D4037;"><?= $store['email'] ?></a></p>
+                        <p class="mb-0" style="color: #5D4037;"><a href="tel:<?= $store['phone_link'] ?>" class="text-decoration-none" style="color: #5D4037;"><?= $store['phone'] ?></a><br><a href="mailto:<?= $store['email'] ?>" class="text-decoration-none" style="color: #5D4037;"><?= $store['email'] ?></a></p>
                     </div>
                 </div>
             </div>
